@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ENCE — Intelijen Acara & Pameran</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#F5F5F7">
+  
+  <!-- Inline Web Manifest for PWA -->
+  <link rel="manifest" id="manifest-link" href='data:application/manifest+json;charset=utf-8,%7B%20%22name%22%3A%20%22ENCE%20Intelijen%22%2C%20%22short_name%22%3A%20%22ENCE%22%2C%20%22start_url%22%3A%20%22.%22%2C%20%22display%22%3A%20%22standalone%22%2C%20%22background_color%22%3A%20%22%23F5F5F7%22%2C%20%22theme_color%22%3A%20%22%230071E3%22%2C%20%22icons%22%3A%20%5B%7B%20%22src%22%3A%20%22data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzFkMWQxZiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkeT0iLjM1ZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmZmZmYiIGZvbnQtc2l6ZT0iNDgiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIj5FPC90ZXh0Pjwvc3ZnPg%3D%3D%22%2C%20%22sizes%22%3A%20%22192x192%22%2C%20%22type%22%3A%20%22image%2Fsvg%2Bxml%22%20%7D%5D%20%7D'>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS for real .xlsx and .csv spreadsheet parsing -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <!-- Inter font fallback for non-Apple OS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-canvas: #F5F5F7;
+      --card-bg: #FFFFFF;
+      --ink-primary: #1D1D1F;
+      --ink-secondary: #86868B;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--ink-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Frosted Glass Sticky Header */
+    .apple-glass {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    /* Apple Bento Card */
+    .bento-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.2s ease;
+    }
+
+    .bento-card-hover:hover {
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07);
+    }
+
+    /* Apple Segmented Control */
+    .segmented-track {
+      background: rgba(118, 118, 128, 0.12);
+      border-radius: 9999px;
+      padding: 3px;
+    }
+
+    .segmented-btn {
+      border-radius: 9999px;
+      transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+      color: #1D1D1F;
+    }
+
+    .segmented-btn.active {
+      background: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+      font-weight: 600;
+    }
+
+    /* Apple Inputs */
+    .apple-input {
+      background: #F5F5F7;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      transition: all 0.18s ease;
+    }
+
+    .apple-input:focus {
+      background: #FFFFFF;
+      border-color: #0071E3;
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+      outline: none;
+    }
+
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 9999px;
+    }
+
+    /* Toast animation */
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .toast-enter {
+      animation: slideUpFade 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Sticky Frosted-Glass Top Navigation -->
+  <header class="apple-glass sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap items-center justify-between py-3 gap-3">
+        <!-- Brand Mark -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1D1D1F] to-[#434347] flex items-center justify-center text-white shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg tracking-tight text-[#1D1D1F]">ENCE</span>
+              <span class="hidden sm:inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-black/5 text-[#86868B]">Intelijen</span>
+            </div>
+            <p class="text-[11px] text-[#86868B] hidden md:block leading-none mt-0.5">Manajemen Acara & Pameran</p>
+          </div>
+        </div>
+
+        <!-- Apple Pill Segmented Navigation -->
+        <nav class="segmented-track flex items-center overflow-x-auto max-w-full order-3 lg:order-2 w-full lg:w-auto justify-between sm:justify-start" role="tablist">
+          <button onclick="switchTab('overview')" id="tab-overview" class="segmented-btn active px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap flex-1 lg:flex-none text-center">
+            Ringkasan
+          </button>
+          <button onclick="switchTab('add-event')" id="tab-add-event" class="segmented-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap flex-1 lg:flex-none text-center">
+            Tambah Acara
+          </button>
+          <button onclick="switchTab('tools')" id="tab-tools" class="segmented-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap flex-1 lg:flex-none text-center relative">
+            Alat & Aset
+            <span id="nav-alert-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-[#FF3B30] ml-1 mb-0.5"></span>
+          </button>
+          <button onclick="switchTab('ai-checklist')" id="tab-ai-checklist" class="segmented-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap flex-1 lg:flex-none text-center">
+            AI Daftar Periksa
+          </button>
+        </nav>
+
+        <!-- Primary Action Button -->
+        <div class="flex items-center gap-2 order-2 lg:order-3">
+          <button id="install-app-btn" onclick="installPWA()" class="hidden bg-[#34C759] hover:bg-[#248A3D] text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-full shadow-sm transition-all flex items-center gap-1.5">
+            <span>Instal Aplikasi</span>
+          </button>
+          <button onclick="switchTab('add-event')" class="bg-[#0071E3] hover:bg-[#0077ED] active:scale-[0.98] text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-full shadow-sm transition-all flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span class="hidden sm:inline">Acara Baru</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 1: OVERVIEW (EXECUTIVE BENTO DASHBOARD)                          -->
+    <!-- ===================================================================== -->
+    <section id="view-overview" class="space-y-6">
+      <!-- Top Control Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F]">Ringkasan Eksekutif</h1>
+          <p class="text-sm text-[#86868B] mt-0.5">Jangkauan mitra, konversi pendapatan, dan intelijen lapangan pameran.</p>
+        </div>
+
+        <!-- Event Selector Pill Dropdown -->
+        <div class="flex items-center gap-2 bg-white px-3.5 py-2 rounded-full border border-black/[0.06] shadow-sm self-start sm:self-auto">
+          <svg class="w-4 h-4 text-[#86868B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+          </svg>
+          <select id="event-filter-select" onchange="renderDashboard()" class="bg-transparent text-sm font-medium text-[#1D1D1F] focus:outline-none pr-2 cursor-pointer truncate max-w-[200px] sm:max-w-xs">
+            <option value="all">Semua Acara Digabung</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 4 Bento KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <!-- KPI 1: Total Events -->
+        <div class="bento-card bento-card-hover p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-[#86868B]">Acara Terlacak</span>
+            <span class="w-8 h-8 rounded-full bg-[#0071E3]/10 text-[#0071E3] flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+              </svg>
+            </span>
+          </div>
+          <div class="mt-4">
+            <div id="kpi-events-count" class="text-3xl font-bold tracking-tight">2</div>
+            <p id="kpi-events-sub" class="text-xs text-[#86868B] mt-1">9 Booth Mitra Pameran</p>
+          </div>
+        </div>
+
+        <!-- KPI 2: Target Budget -->
+        <div class="bento-card bento-card-hover p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-[#86868B]">Target Anggaran</span>
+            <span class="w-8 h-8 rounded-full bg-black/5 text-[#1D1D1F] flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+          </div>
+          <div class="mt-4">
+            <div id="kpi-target-amount" class="text-2xl sm:text-3xl font-bold tracking-tight">Rp 83.00B</div>
+            <p class="text-xs text-[#86868B] mt-1">Kuota Gabungan Mitra</p>
+          </div>
+        </div>
+
+        <!-- KPI 3: Achieved Revenue -->
+        <div class="bento-card bento-card-hover p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-[#86868B]">Tercapai</span>
+            <span id="kpi-achievement-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">57.4%</span>
+          </div>
+          <div class="mt-4">
+            <div id="kpi-achieved-amount" class="text-2xl sm:text-3xl font-bold tracking-tight">Rp 47.65B</div>
+            <div class="w-full bg-[#F5F5F7] h-2 rounded-full mt-2.5 overflow-hidden">
+              <div id="kpi-achievement-bar" class="bg-[#34C759] h-full rounded-full transition-all duration-500" style="width: 57.4%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI 4: Asset Health -->
+        <div class="bento-card bento-card-hover p-5 flex flex-col justify-between cursor-pointer" onclick="switchTab('tools')">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-[#86868B]">Kesehatan Aset</span>
+            <span id="kpi-asset-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]">2 Peringatan</span>
+          </div>
+          <div class="mt-4">
+            <div id="kpi-asset-score" class="text-2xl sm:text-3xl font-bold tracking-tight">97.2%</div>
+            <p id="kpi-asset-sub" class="text-xs text-[#86868B] mt-1">5 Magnet Hilang • 0 Botol Minum</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier Performance Comparison & Event Snapshot -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Priority vs Standard Tier Bar Comparison -->
+        <div class="bento-card p-6 lg:col-span-2 flex flex-col justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+            <div>
+              <h2 class="text-base font-semibold text-[#1D1D1F]">Kinerja Konversi Tingkatan Mitra</h2>
+              <p class="text-xs text-[#86868B]">Tingkat pencapaian membandingkan Mitra Prioritas (Tier-1) vs Mitra Standar</p>
+            </div>
+            <span class="text-xs font-medium text-[#0071E3] bg-[#0071E3]/10 px-3 py-1 rounded-full self-start sm:self-auto">
+              Wawasan Strategis
+            </span>
+          </div>
+
+          <div class="space-y-5 my-auto">
+            <!-- Priority Tier Bar -->
+            <div>
+              <div class="flex justify-between items-baseline mb-1.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#0071E3]"></span>
+                  <span class="text-sm font-semibold text-[#1D1D1F]">Mitra Prioritas (Tier-1)</span>
+                  <span id="tier-priority-count" class="text-xs text-[#86868B]">(5 mitra)</span>
+                </div>
+                <div class="text-right">
+                  <span id="tier-priority-pct" class="text-sm font-bold text-[#0071E3]">75.9%</span>
+                  <span id="tier-priority-vals" class="text-xs text-[#86868B] ml-1.5">(Rp 41.74B / Rp 55.00B)</span>
+                </div>
+              </div>
+              <div class="w-full h-3.5 bg-[#F5F5F7] rounded-full overflow-hidden">
+                <div id="tier-priority-bar" class="h-full bg-[#0071E3] rounded-full transition-all duration-500" style="width: 75.9%"></div>
+              </div>
+            </div>
+
+            <!-- Standard Tier Bar -->
+            <div>
+              <div class="flex justify-between items-baseline mb-1.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#86868B]"></span>
+                  <span class="text-sm font-semibold text-[#1D1D1F]">Mitra Standar</span>
+                  <span id="tier-standard-count" class="text-xs text-[#86868B]">(4 mitra)</span>
+                </div>
+                <div class="text-right">
+                  <span id="tier-standard-pct" class="text-sm font-bold text-[#1D1D1F]">17.5%</span>
+                  <span id="tier-standard-vals" class="text-xs text-[#86868B] ml-1.5">(Rp 4.90B / Rp 28.00B)</span>
+                </div>
+              </div>
+              <div class="w-full h-3.5 bg-[#F5F5F7] rounded-full overflow-hidden">
+                <div id="tier-standard-bar" class="h-full bg-[#86868B] rounded-full transition-all duration-500" style="width: 17.5%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tier-insight-callout" class="mt-6 pt-4 border-t border-black/[0.06] flex items-start gap-2.5 text-xs text-[#1D1D1F]">
+            <span class="text-[#0071E3] font-bold mt-0.5">✦</span>
+            <p class="leading-relaxed text-[#515154]">Mitra Prioritas memberikan <strong class="text-[#1D1D1F]">konversi anggaran 4.3x lebih tinggi</strong> dari booth Standar. Tugaskan PIC senior khusus dan subsidi tarif untuk mitra Tier-1 terlebih dahulu.</p>
+          </div>
+        </div>
+
+        <!-- Event Metadata & Quick Playbook CTA -->
+        <div class="bento-card p-6 flex flex-col justify-between bg-gradient-to-b from-white to-[#FAFAFC]">
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-[#86868B]">Cakupan Terpilih</span>
+            <h3 id="scope-title" class="text-lg font-bold text-[#1D1D1F] mt-1">Semua Pameran Terlacak</h3>
+            <p id="scope-meta" class="text-xs text-[#86868B] mt-1">2 Pameran Utama • Data Lapangan Digabung</p>
+
+            <div class="mt-5 space-y-3">
+              <div class="flex items-center justify-between text-xs py-2 border-b border-black/[0.05]">
+                <span class="text-[#86868B]">Mitra Terbaik</span>
+                <span id="scope-top-partner" class="font-semibold text-[#1D1D1F]">First Machinery Corp (99.4%)</span>
+              </div>
+              <div class="flex items-center justify-between text-xs py-2 border-b border-black/[0.05]">
+                <span class="text-[#86868B]">Promo Ter-Efektif</span>
+                <span id="scope-top-promo" class="font-semibold text-[#1D1D1F]">DP 10% + Masa Tenggang 3B</span>
+              </div>
+              <div class="flex items-center justify-between text-xs py-2">
+                <span class="text-[#86868B]">Rata-rata Tim Lapangan</span>
+                <span id="scope-avg-staff" class="font-semibold text-[#1D1D1F]">11 Staf / Hari</span>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="switchTab('ai-checklist')" class="mt-6 w-full py-2.5 px-4 rounded-xl bg-[#1D1D1F] hover:bg-black text-white text-xs font-semibold transition-all flex items-center justify-center gap-2">
+            <span>Buat Panduan Pra-Acara Berikutnya</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Partner Booth Performance Table -->
+      <div class="bento-card overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-black/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-base font-semibold text-[#1D1D1F]">Kinerja Booth Mitra & Peserta Pameran</h2>
+            <p class="text-xs text-[#86868B] mt-0.5">Rincian jangkauan mitra, penawaran promo, dan aset yang disebarkan</p>
+          </div>
+
+          <!-- Search & Tier Filter -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <div class="relative">
+              <svg class="w-4 h-4 text-[#86868B] absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <input type="text" id="partner-search" oninput="renderDashboard()" placeholder="Cari mitra, PIC, promo..." class="apple-input pl-9 pr-3 py-1.5 text-xs w-48 sm:w-56" />
+            </div>
+
+            <select id="tier-filter-select" onchange="renderDashboard()" class="apple-input px-3 py-1.5 text-xs font-medium text-[#1D1D1F] cursor-pointer">
+              <option value="all">Semua Tingkat</option>
+              <option value="Priority">Prioritas (Tier-1)</option>
+              <option value="Standard">Standar</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-[#FAFAFC] text-[11px] font-semibold uppercase tracking-wider text-[#86868B] border-b border-black/[0.06]">
+                <th class="py-3 px-5 whitespace-nowrap">Mitra / Peserta</th>
+                <th class="py-3 px-4">Tingkat</th>
+                <th class="py-3 px-4 whitespace-nowrap">Skema Promo</th>
+                <th class="py-3 px-4 whitespace-nowrap">PIC Utama</th>
+                <th class="py-3 px-4 text-right">Target</th>
+                <th class="py-3 px-4 text-right">Tercapai</th>
+                <th class="py-3 px-5 text-right whitespace-nowrap">Pencapaian (%)</th>
+              </tr>
+            </thead>
+            <tbody id="partner-table-body" class="divide-y divide-black/[0.05] text-sm">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Post-Mortem Field Evaluation Notes Card -->
+      <div class="bento-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-[#FF9500]/15 text-[#FF9500] flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-base font-semibold text-[#1D1D1F]">Catatan Evaluasi Lapangan Pasca-Acara</h2>
+              <p class="text-xs text-[#86868B]">Pembelajaran lapangan otomatis dimasukkan ke Daftar Periksa Pra-Acara AI</p>
+            </div>
+          </div>
+        </div>
+        <div id="evaluation-notes-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 2: ADD / IMPORT PAST EVENT                                       -->
+    <!-- ===================================================================== -->
+    <section id="view-add-event" class="hidden space-y-6">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F]">Tambah atau Impor Acara</h1>
+        <p class="text-sm text-[#86868B] mt-0.5">Unggah laporan Excel/CSV historis atau rekam pameran baru secara manual.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Spreadsheet Importer -->
+        <div class="bento-card p-6 lg:col-span-1 flex flex-col justify-between space-y-5">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="text-base font-semibold text-[#1D1D1F]">Impor Cepat Spreadsheet</h2>
+              <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#0071E3]/10 text-[#0071E3]">.XLSX / .CSV</span>
+            </div>
+            <p class="text-xs text-[#86868B] leading-relaxed">Letakkan spreadsheet acara Anda untuk menstandarisasi metrik mitra dan log lapangan.</p>
+
+            <!-- Dropzone -->
+            <label for="spreadsheet-upload" id="dropzone-area" class="mt-4 border-2 border-dashed border-black/15 hover:border-[#0071E3] rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-[#FAFAFC]">
+              <div class="w-10 h-10 rounded-full bg-[#0071E3]/10 text-[#0071E3] flex items-center justify-center mb-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+              </div>
+              <span class="text-xs font-semibold text-[#1D1D1F]">Klik untuk unggah / seret & lepas</span>
+              <span class="text-[11px] text-[#86868B] mt-1">Mendukung file Excel (.xlsx) atau CSV</span>
+              <input id="spreadsheet-upload" type="file" accept=".csv,.xlsx,.xls" class="hidden" onchange="handleFileUpload(event)" />
+            </label>
+          </div>
+
+          <div class="pt-4 border-t border-black/[0.06] space-y-3">
+            <p class="text-[11px] text-[#86868B]">Butuh tata letak kolom standar?</p>
+            <button type="button" onclick="downloadSampleCSV()" class="w-full py-2 px-3 rounded-xl bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold text-[#1D1D1F] transition-colors flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              <span>Unduh Templat Contoh CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Step-by-Step Manual Event Form -->
+        <form id="manual-event-form" onsubmit="saveManualEvent(event)" class="bento-card p-6 lg:col-span-2 space-y-6">
+          <div class="flex items-center justify-between border-b border-black/[0.06] pb-4">
+            <div>
+              <h2 class="text-base font-semibold text-[#1D1D1F]">Entri Acara Manual</h2>
+              <p class="text-xs text-[#86868B]">Rekam pameran yang telah selesai atau yang akan datang ke sistem ENCE</p>
+            </div>
+            <span class="text-xs text-[#86868B]">Semua data tersimpan lokal</span>
+          </div>
+
+          <!-- Step 1: Event Basics -->
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#0071E3] mb-3">1. Profil Acara</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Nama Acara *</label>
+                <input type="text" id="form-event-name" required placeholder="Cth. Pameran Kemasan Asia 2025" class="apple-input w-full px-3.5 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Lokasi / Gedung *</label>
+                <input type="text" id="form-event-venue" required placeholder="Cth. Hall B JCC" class="apple-input w-full px-3.5 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Tanggal *</label>
+                <input type="text" id="form-event-dates" required placeholder="Cth. 14–17 Mei, 2025" class="apple-input w-full px-3.5 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Rata-rata Staf Harian</label>
+                <input type="number" id="form-event-staff" value="10" min="1" class="apple-input w-full px-3.5 py-2 text-sm" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Partner Booths & Reach -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-[#0071E3]">2. Booth Mitra & Jangkauan</h3>
+              <button type="button" onclick="addPartnerFormRow()" class="text-xs font-semibold text-[#0071E3] hover:underline flex items-center gap-1">
+                <span>+ Tambah Baris Mitra</span>
+              </button>
+            </div>
+            <div id="form-partners-container" class="space-y-3">
+              <!-- Dynamic partner rows inserted here -->
+            </div>
+          </div>
+
+          <!-- Step 3: Field Evaluation Notes -->
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#0071E3] mb-3">3. Evaluasi Lapangan Pasca-Acara</h3>
+            <textarea id="form-event-notes" rows="3" placeholder="Apa yang berjalan baik? Ada keterlambatan persiapan, masalah spanduk, dll?" class="apple-input w-full px-3.5 py-2.5 text-sm"></textarea>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-3">
+            <button type="button" onclick="resetManualForm()" class="px-4 py-2 rounded-full text-xs font-semibold text-[#86868B] hover:text-[#1D1D1F] transition-colors">Bersihkan Formulir</button>
+            <button type="submit" class="bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs sm:text-sm font-semibold px-6 py-2.5 rounded-full shadow-sm transition-all">
+              Simpan Acara ke ENCE
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 3: TOOLS & ASSETS INVENTORY                                      -->
+    <!-- ===================================================================== -->
+    <section id="view-tools" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F]">Inventaris Alat & Aset</h1>
+          <p class="text-sm text-[#86868B] mt-0.5">Lacak perangkat pameran, label aset berseri, dan stok barang promosi.</p>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/[0.06]">
+            <span class="w-2 h-2 rounded-full bg-[#34C759]"></span> Tersedia
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/[0.06]">
+            <span class="w-2 h-2 rounded-full bg-[#0071E3]"></span> Dipakai
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/[0.06]">
+            <span class="w-2 h-2 rounded-full bg-[#FF3B30]"></span> Hilang
+          </span>
+        </div>
+      </div>
+
+      <!-- Inventory Summary Cards Grid -->
+      <div id="inventory-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Populated via JS -->
+      </div>
+
+      <!-- Interactive Serialized Asset Tag Matrix -->
+      <div class="bento-card p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-base font-semibold text-[#1D1D1F]">Matriks Tag Perangkat Keras Berseri</h2>
+            <p class="text-xs text-[#86868B] mt-0.5">Klik tag aset untuk mengubah status: <strong class="text-[#1D1D1F]">Tersedia → Dipakai → Hilang</strong></p>
+          </div>
+
+          <select id="asset-category-filter" onchange="renderToolsView()" class="apple-input px-3 py-1.5 text-xs font-medium text-[#1D1D1F] cursor-pointer self-start sm:self-auto">
+            <option value="all">Semua Perangkat</option>
+            <option value="MAG">Tanda Magnetik (MAG)</option>
+            <option value="BNR">Spanduk / Banner (Besar & Kecil)</option>
+            <option value="ACR">Stan Akrilik (T & L)</option>
+          </select>
+        </div>
+
+        <div id="serialized-tags-container" class="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-2.5">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 4: AI CHECKLIST (PRE-EVENT STRATEGIST)                           -->
+    <!-- ===================================================================== -->
+    <section id="view-ai-checklist" class="hidden space-y-6">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F]">Ahli Strategi AI Pra-Acara</h1>
+        <p class="text-sm text-[#86868B] mt-0.5">Mensintesis ROI acara lalu, stok inventaris, dan evaluasi lapangan menjadi panduan praktis yang dapat dieksekusi.</p>
+      </div>
+
+      <!-- Configuration Input Card -->
+      <div class="bento-card p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Nama Acara Mendatang</label>
+            <input type="text" id="ai-event-name" value="Pameran Otomasi Industri & Robotika 2026" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Format Acara</label>
+            <select id="ai-event-type" class="apple-input w-full px-3 py-2 text-sm cursor-pointer">
+              <option value="Major Exhibition">Pameran Utama Besar</option>
+              <option value="In-House Open House">Pameran In-House / Internal</option>
+              <option value="Partner Roadshow">Roadshow Mitra</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Booth Mitra / Hari</label>
+            <div class="flex gap-2">
+              <input type="number" id="ai-partner-count" value="8" min="1" max="50" title="Booth Mitra" class="apple-input w-1/2 px-3 py-2 text-sm text-center" />
+              <input type="number" id="ai-duration-days" value="4" min="1" max="14" title="Durasi Hari" class="apple-input w-1/2 px-3 py-2 text-sm text-center" />
+            </div>
+          </div>
+          <div>
+            <button id="generate-playbook-btn" onclick="generatePreEventPlaybook()" class="w-full bg-[#0071E3] hover:bg-[#0077ED] active:scale-[0.99] text-white text-xs sm:text-sm font-semibold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+              <span>✦ Buat Panduan</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-Part Playbook Output Grid -->
+      <div id="playbook-output" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Card 1: Recommended Tools & +10% Buffer Kit -->
+        <div class="bento-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-[#0071E3]">1. Perangkat & Cadangan</span>
+              <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#0071E3]/10 text-[#0071E3]">+10% Cadangan Spare</span>
+            </div>
+            <h3 class="text-base font-bold text-[#1D1D1F]">Daftar Bawaan Disarankan</h3>
+            <p class="text-xs text-[#86868B] mt-0.5">Dihitung dari jumlah booth + historis penggantian</p>
+
+            <ul id="playbook-tools-list" class="mt-4 space-y-2.5 text-xs">
+              <!-- Populated via JS -->
+            </ul>
+          </div>
+
+          <div id="playbook-stock-warning" class="mt-5 p-3 rounded-xl bg-[#FF9500]/10 border border-[#FF9500]/20 text-xs text-[#9A5700]">
+            <!-- Low stock warning injected here -->
+          </div>
+        </div>
+
+        <!-- Card 2: Partner & Staffing Strategy -->
+        <div class="bento-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-[#34C759]">2. Strategi Mitra & ROI</span>
+              <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">Berdasarkan Data</span>
+            </div>
+            <h3 class="text-base font-bold text-[#1D1D1F]">Alokasi Booth & Fokus Promo</h3>
+            <p class="text-xs text-[#86868B] mt-0.5">Berdasarkan tingkat konversi aktual Mitra Prioritas vs Standar Anda</p>
+
+            <div id="playbook-strategy-content" class="mt-4 space-y-3 text-xs text-[#1D1D1F] leading-relaxed">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-black/[0.06] flex items-center justify-between text-xs">
+            <span class="text-[#86868B]">Saran Penempatan Staf Harian</span>
+            <span id="playbook-staff-rec" class="font-bold text-[#1D1D1F]">12 PICs / Hari</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Chronological Pre-Event Checklist -->
+        <div class="bento-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-[#FF9500]">3. Timeline Eksekusi</span>
+              <span id="checklist-progress-pill" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-black/5 text-[#1D1D1F]">0 / 6 Selesai</span>
+            </div>
+            <h3 class="text-base font-bold text-[#1D1D1F]">Daftar Periksa Pra-Acara</h3>
+            <p class="text-xs text-[#86868B] mt-0.5">Tugas interaktif disusun dari masalah evaluasi lapangan masa lalu</p>
+
+            <div id="playbook-checklist-items" class="mt-4 space-y-2.5">
+              <!-- Interactive checkable items populated via JS -->
+            </div>
+          </div>
+
+          <button onclick="copyPlaybookSummary()" class="mt-5 w-full py-2 px-3 rounded-xl bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold text-[#1D1D1F] transition-colors">
+            Salin Panduan ke Papan Klip (Clipboard)
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Subtle Footer with Sample Data Reset -->
+  <footer class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-black/[0.05] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#86868B]">
+    <div>ENCE — Intelijen Acara & Pameran • Ruang Kerja Lokal (Offline-First)</div>
+    <button onclick="resetAllData()" class="hover:text-[#FF3B30] transition-colors underline">Reset Data Sampel Asli</button>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    // =========================================================================
+    // 0. PWA SERVICE WORKER REGISTRATION (MAKE IT INSTALLABLE APP)
+    // =========================================================================
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+        self.addEventListener('fetch', e => {
+          e.respondWith(fetch(e.request).catch(() => new Response('Offline - Aplikasi ENCE bekerja di mode luring (offline)')));
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob))
+        .catch(err => console.log('SW Registration failed', err));
+    }
+
+    // Handle "Add to Home Screen" prompt for the user
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('install-app-btn');
+      if (installBtn) installBtn.classList.remove('hidden');
+    });
+
+    function installPWA() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the A2HS prompt');
+        }
+        deferredPrompt = null;
+        document.getElementById('install-app-btn').classList.add('hidden');
+      });
+    }
+
+    // =========================================================================
+    // 1. DEFAULT PRE-LOADED REALISTIC SAMPLE DATA (BRAND-NEUTRAL)
+    // =========================================================================
+    const DEFAULT_EVENTS = [
+      {
+        id: "evt-plastics-2024",
+        name: "Pameran Plastik & Karet 2024",
+        dates: "20–23 Nov 2024",
+        venue: "Hall A Convention Center",
+        dailyStaff: 10,
+        partners: [
+          { name: "Grup Mesin LK", category: "Cetakan Injeksi", tier: "Priority", promo: "Subsidi Penuh 13.5%, DP 20%", pic: "Hendra", target: 10000000000, achieved: 2269031000, tools: "1 Banner Besar, 2 Magnet, 3 Stan Akrilik" },
+          { name: "Peralatan Bilplast", category: "Mesin Tiup", tier: "Standard", promo: "Subsidi Sebagian, Tenor 12-36b", pic: "Adi", target: 5000000000, achieved: 1150000000, tools: "1 Banner Besar, 4 Magnet" },
+          { name: "Teknologi Mahatanee", category: "Ekstrusi", tier: "Standard", promo: "Tarif Standar 13.5%", pic: "Adi", target: 3000000000, achieved: 420000000, tools: "1 Banner, 2 Magnet" }
+        ],
+        evaluationNotes: "Selesaikan desain spanduk dan magnet 1 hari sebelum pertemuan pra-acara terakhir. Jangan menggantung spanduk di dekat kabel di atas kepala karena staf bisa memindahkannya. Tambahkan info cicilan mencolok dan kode QR kontak di magnet."
+      },
+      {
+        id: "evt-manufacturing-2024",
+        name: "Pameran Manufaktur Internasional 2024",
+        dates: "4–7 Des 2024",
+        venue: "Balai Pameran Utama",
+        dailyStaff: 12,
+        partners: [
+          { name: "First Machinery Corp", category: "CNC & Logam", tier: "Priority", promo: "DP 10% + Masa Tenggang 3 Bulan", pic: "Johan", target: 20000000000, achieved: 19887737000, tools: "5 Magnet, 2 Stan Akrilik" },
+          { name: "Industri Yamazen", category: "Alat Presisi", tier: "Priority", promo: "Subsidi Penuh", pic: "Deky", target: 10000000000, achieved: 9631996000, tools: "4 Magnet" },
+          { name: "Teknika Logam Jaya", category: "Lembaran Logam", tier: "Priority", promo: "Tarif Rata Khusus (Flat)", pic: "Albert", target: 5000000000, achieved: 4649600000, tools: "2 Banner" },
+          { name: "Grup Multi Otano", category: "Robotika & Las", tier: "Priority", promo: "Subsidi Penuh 12-36b", pic: "Oscar", target: 10000000000, achieved: 5303815000, tools: "2 Banner" },
+          { name: "Mesin Riyadi", category: "Mesin Umum", tier: "Standard", promo: "Tarif Standar", pic: "Deky", target: 10000000000, achieved: 2378175000, tools: "1 Banner, 3 Magnet, 1 Stan Akrilik" },
+          { name: "Teknologi Frisindo", category: "Sistem Kemasan", tier: "Standard", promo: "Tarif Standar", pic: "Deky", target: 10000000000, achieved: 955710000, tools: "2 X-Banner, 3 Magnet" }
+        ],
+        evaluationNotes: "Tiba setelah jam 9 pagi menyebabkan hilangnya tempat pajangan utama karena direbut pesaing. Tim penjualan mitra memerlukan pengarahan promo 1 lawan 1 sebelum Hari ke-1. Sediakan voucher makan individu (Rp 25.000/orang) untuk mempercepat perputaran tim di lapangan. Siapkan magnet kecil/sedang/besar agar sesuai dengan berbagai ukuran mesin."
+      }
+    ];
+
+    const DEFAULT_INVENTORY = [
+      { id: "inv-mag", name: "Tanda Magnetik", type: "Pakai Ulang", total: 36, available: 31, missing: 5, unit: "buah" },
+      { id: "inv-bnr-l", name: "Banner Besar", type: "Pakai Ulang", total: 4, available: 4, missing: 0, unit: "buah" },
+      { id: "inv-bnr-s", name: "Banner Kecil", type: "Pakai Ulang", total: 11, available: 11, missing: 0, unit: "buah" },
+      { id: "inv-acr-t", name: "Akrilik T-Stand", type: "Pakai Ulang", total: 8, available: 8, missing: 0, unit: "buah" },
+      { id: "inv-acr-l", name: "Akrilik L-Stand", type: "Pakai Ulang", total: 5, available: 5, missing: 0, unit: "buah" },
+      { id: "inv-brd", name: "Papan Nama", type: "Pakai Ulang", total: 20, available: 20, missing: 0, unit: "buah" },
+      { id: "inv-vst", name: "Rompi Staf", type: "Pakai Ulang", total: 46, available: 46, missing: 0, unit: "buah" },
+      { id: "inv-lny", name: "Lanyard (Tali ID)", type: "Pakai Ulang", total: 51, available: 51, missing: 0, unit: "buah" },
+      { id: "inv-pen", name: "Pulpen Branding", type: "Habis Pakai", total: 504, available: 504, missing: 0, unit: "buah" },
+      { id: "inv-bag", name: "Tas Kertas (Paperbag)", type: "Habis Pakai", total: 500, available: 500, missing: 0, unit: "buah" },
+      { id: "inv-tmb", name: "Botol Minum Termos", type: "Habis Pakai", total: 100, available: 0, missing: 0, unit: "buah" }
+    ];
+
+    function buildDefaultTags() {
+      const tags = [];
+      const missingMagnets = new Set([9, 10, 11, 12, 24]);
+      for (let i = 1; i <= 36; i++) {
+        const code = `MAG-${String(i).padStart(2, '0')}`;
+        tags.push({
+          code,
+          category: "MAG",
+          status: missingMagnets.has(i) ? "Hilang" : "Tersedia"
+        });
+      }
+      for (let i = 1; i <= 4; i++) {
+        tags.push({ code: `BNR-L${String(i).padStart(2, '0')}`, category: "BNR", status: "Tersedia" });
+      }
+      for (let i = 1; i <= 11; i++) {
+        tags.push({ code: `BNR-S${String(i).padStart(2, '0')}`, category: "BNR", status: "Tersedia" });
+      }
+      for (let i = 1; i <= 13; i++) {
+        tags.push({ code: `ACR-${String(i).padStart(2, '0')}`, category: "ACR", status: "Tersedia" });
+      }
+      return tags;
+    }
+
+    // =========================================================================
+    // 2. STATE & LOCALSTORAGE MANAGEMENT
+    // =========================================================================
+    let state = {
+      events: [],
+      inventory: [],
+      tags: [],
+      checklistStates: {}
+    };
+
+    function loadState() {
+      try {
+        const savedEvents = localStorage.getItem("ence_events_v2_id");
+        const savedInv = localStorage.getItem("ence_inventory_v2_id");
+        const savedTags = localStorage.getItem("ence_tags_v2_id");
+        const savedChecks = localStorage.getItem("ence_checks_v2_id");
+
+        state.events = savedEvents ? JSON.parse(savedEvents) : JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+        state.inventory = savedInv ? JSON.parse(savedInv) : JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
+        state.tags = savedTags ? JSON.parse(savedTags) : buildDefaultTags();
+        state.checklistStates = savedChecks ? JSON.parse(savedChecks) : {};
+      } catch (err) {
+        state.events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+        state.inventory = JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
+        state.tags = buildDefaultTags();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem("ence_events_v2_id", JSON.stringify(state.events));
+        localStorage.setItem("ence_inventory_v2_id", JSON.stringify(state.inventory));
+        localStorage.setItem("ence_tags_v2_id", JSON.stringify(state.tags));
+        localStorage.setItem("ence_checks_v2_id", JSON.stringify(state.checklistStates));
+      } catch (e) {
+        console.warn("Storage quota warning", e);
+      }
+    }
+
+    function resetAllData() {
+      localStorage.removeItem("ence_events_v2_id");
+      localStorage.removeItem("ence_inventory_v2_id");
+      localStorage.removeItem("ence_tags_v2_id");
+      localStorage.removeItem("ence_checks_v2_id");
+      loadState();
+      populateEventDropdown();
+      renderDashboard();
+      renderToolsView();
+      generatePreEventPlaybook();
+      showToast("Data sampel dipulihkan kembali.");
+    }
+
+    // =========================================================================
+    // 3. CURRENCY & FORMATTING HELPERS
+    // =========================================================================
+    function formatIDRCompact(num) {
+      if (!num || isNaN(num)) return "Rp 0";
+      if (num >= 1_000_000_000) {
+        return `Rp ${(num / 1_000_000_000).toFixed(2)}B`;
+      }
+      if (num >= 1_000_000) {
+        return `Rp ${(num / 1_000_000).toFixed(1)}M`;
+      }
+      return "Rp " + num.toLocaleString("id-ID");
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      const bg = type === "error" ? "bg-[#FF3B30] text-white" : "bg-[#1D1D1F] text-white";
+      toast.className = `toast-enter ${bg} px-4 py-2.5 rounded-full shadow-lg text-xs font-medium flex items-center gap-2`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.25s ease";
+        setTimeout(() => toast.remove(), 250);
+      }, 2800);
+    }
+
+    // =========================================================================
+    // 4. NAVIGATION CONTROLLER
+    // =========================================================================
+    function switchTab(tabId) {
+      const views = ["overview", "add-event", "tools", "ai-checklist"];
+      views.forEach(v => {
+        document.getElementById(`view-${v}`).classList.toggle("hidden", v !== tabId);
+        const btn = document.getElementById(`tab-${v}`);
+        if (btn) btn.classList.toggle("active", v === tabId);
+      });
+
+      if (tabId === "overview") renderDashboard();
+      if (tabId === "tools") renderToolsView();
+      if (tabId === "ai-checklist") generatePreEventPlaybook();
+    }
+
+    // =========================================================================
+    // 5. VIEW 1: EXECUTIVE BENTO DASHBOARD RENDERER
+    // =========================================================================
+    function populateEventDropdown() {
+      const select = document.getElementById("event-filter-select");
+      const currentVal = select.value;
+      select.innerHTML = `<option value="all">Semua Acara Digabung (${state.events.length})</option>`;
+      state.events.forEach(evt => {
+        const opt = document.createElement("option");
+        opt.value = evt.id;
+        opt.textContent = `${evt.name} (${evt.dates})`;
+        select.appendChild(opt);
+      });
+      if ([...select.options].some(o => o.value === currentVal)) {
+        select.value = currentVal;
+      }
+    }
+
+    function renderDashboard() {
+      const selectedId = document.getElementById("event-filter-select").value;
+      const searchQuery = document.getElementById("partner-search").value.toLowerCase().trim();
+      const tierFilter = document.getElementById("tier-filter-select").value;
+
+      const filteredEvents = selectedId === "all"
+        ? state.events
+        : state.events.filter(e => e.id === selectedId);
+
+      // Aggregate metrics
+      let allPartners = [];
+      let totalTarget = 0;
+      let totalAchieved = 0;
+      let totalStaff = 0;
+
+      filteredEvents.forEach(evt => {
+        totalStaff += (evt.dailyStaff || 10);
+        evt.partners.forEach(p => {
+          allPartners.push({ ...p, eventName: evt.name });
+          totalTarget += Number(p.target || 0);
+          totalAchieved += Number(p.achieved || 0);
+        });
+      });
+
+      const overallPct = totalTarget > 0 ? ((totalAchieved / totalTarget) * 100) : 0;
+
+      // Asset health calculation from live tags + inventory
+      const missingTagsCount = state.tags.filter(t => t.status === "Hilang").length;
+      const lowStockCount = state.inventory.filter(i => i.available === 0).length;
+      const totalAlerts = (missingTagsCount > 0 ? 1 : 0) + (lowStockCount > 0 ? 1 : 0);
+      const totalHardware = state.tags.length;
+      const healthyHardware = totalHardware - missingTagsCount;
+      const assetHealthPct = totalHardware > 0 ? ((healthyHardware / totalHardware) * 100).toFixed(1) : "100.0";
+
+      // Update KPI Cards
+      document.getElementById("kpi-events-count").textContent = filteredEvents.length;
+      document.getElementById("kpi-events-sub").textContent = `${allPartners.length} Booth Mitra`;
+      document.getElementById("kpi-target-amount").textContent = formatIDRCompact(totalTarget);
+      document.getElementById("kpi-achieved-amount").textContent = formatIDRCompact(totalAchieved);
+      document.getElementById("kpi-achievement-badge").textContent = `${overallPct.toFixed(1)}%`;
+      document.getElementById("kpi-achievement-bar").style.width = `${Math.min(100, overallPct)}%`;
+
+      document.getElementById("kpi-asset-score").textContent = `${assetHealthPct}%`;
+      document.getElementById("kpi-asset-badge").textContent = totalAlerts > 0 ? `${totalAlerts} Peringatan` : "Sehat";
+      document.getElementById("kpi-asset-badge").className = totalAlerts > 0
+        ? "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]"
+        : "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]";
+      document.getElementById("kpi-asset-sub").textContent = `${missingTagsCount} Tag Hilang • ${lowStockCount} Habis Stok`;
+
+      // Update nav red dot
+      document.getElementById("nav-alert-dot").classList.toggle("hidden", totalAlerts === 0);
+
+      // Priority vs Standard Comparison
+      const priorityPartners = allPartners.filter(p => p.tier === "Priority");
+      const standardPartners = allPartners.filter(p => p.tier !== "Priority");
+
+      const priTarget = priorityPartners.reduce((s, p) => s + Number(p.target || 0), 0);
+      const priAchieved = priorityPartners.reduce((s, p) => s + Number(p.achieved || 0), 0);
+      const priPct = priTarget > 0 ? (priAchieved / priTarget) * 100 : 0;
+
+      const stdTarget = standardPartners.reduce((s, p) => s + Number(p.target || 0), 0);
+      const stdAchieved = standardPartners.reduce((s, p) => s + Number(p.achieved || 0), 0);
+      const stdPct = stdTarget > 0 ? (stdAchieved / stdTarget) * 100 : 0;
+
+      document.getElementById("tier-priority-count").textContent = `(${priorityPartners.length} mitra)`;
+      document.getElementById("tier-priority-pct").textContent = `${priPct.toFixed(1)}%`;
+      document.getElementById("tier-priority-vals").textContent = `(${formatIDRCompact(priAchieved)} / ${formatIDRCompact(priTarget)})`;
+      document.getElementById("tier-priority-bar").style.width = `${Math.min(100, priPct)}%`;
+
+      document.getElementById("tier-standard-count").textContent = `(${standardPartners.length} mitra)`;
+      document.getElementById("tier-standard-pct").textContent = `${stdPct.toFixed(1)}%`;
+      document.getElementById("tier-standard-vals").textContent = `(${formatIDRCompact(stdAchieved)} / ${formatIDRCompact(stdTarget)})`;
+      document.getElementById("tier-standard-bar").style.width = `${Math.min(100, stdPct)}%`;
+
+      // Update Scope Snapshot Card
+      if (selectedId === "all") {
+        document.getElementById("scope-title").textContent = "Semua Pameran Terlacak";
+        document.getElementById("scope-meta").textContent = `${filteredEvents.length} Pameran • Data Lapangan Digabung`;
+      } else if (filteredEvents[0]) {
+        document.getElementById("scope-title").textContent = filteredEvents[0].name;
+        document.getElementById("scope-meta").textContent = `${filteredEvents[0].dates} • ${filteredEvents[0].venue}`;
+      }
+
+      if (allPartners.length > 0) {
+        const sortedByPct = [...allPartners].sort((a, b) => {
+          const pctA = a.target > 0 ? a.achieved / a.target : 0;
+          const pctB = b.target > 0 ? b.achieved / b.target : 0;
+          return pctB - pctA;
+        });
+        const top = sortedByPct[0];
+        const topPct = top.target > 0 ? ((top.achieved / top.target) * 100).toFixed(1) : "0.0";
+        document.getElementById("scope-top-partner").textContent = `${top.name} (${topPct}%)`;
+        document.getElementById("scope-top-promo").textContent = top.promo || "Subsidi Penuh";
+      }
+      const avgStaff = filteredEvents.length > 0 ? Math.round(totalStaff / filteredEvents.length) : 0;
+      document.getElementById("scope-avg-staff").textContent = `${avgStaff} PICs / Hari`;
+
+      // Filter Table Rows
+      const visiblePartners = allPartners.filter(p => {
+        const matchesTier = tierFilter === "all" || p.tier === tierFilter;
+        const matchesQuery = !searchQuery ||
+          p.name.toLowerCase().includes(searchQuery) ||
+          (p.category || "").toLowerCase().includes(searchQuery) ||
+          (p.pic || "").toLowerCase().includes(searchQuery) ||
+          (p.promo || "").toLowerCase().includes(searchQuery);
+        return matchesTier && matchesQuery;
+      });
+
+      const tbody = document.getElementById("partner-table-body");
+      if (visiblePartners.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-xs text-[#86868B]">Tidak ada booth mitra yang sesuai dengan filter Anda.</td></tr>`;
+      } else {
+        tbody.innerHTML = visiblePartners.map(p => {
+          const pct = p.target > 0 ? ((p.achieved / p.target) * 100) : 0;
+          const badgeClass = pct >= 80
+            ? "bg-[#34C759]/15 text-[#248A3D]"
+            : pct >= 40
+              ? "bg-[#0071E3]/10 text-[#0071E3]"
+              : "bg-[#FF9500]/15 text-[#B25E00]";
+          const tierPill = p.tier === "Priority"
+            ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#0071E3]/10 text-[#0071E3]">Prioritas</span>`
+            : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-black/5 text-[#515154]">Standar</span>`;
+
+          return `
+            <tr class="hover:bg-[#FAFAFC] transition-colors">
+              <td class="py-3.5 px-5">
+                <div class="font-semibold text-[#1D1D1F]">${p.name}</div>
+                <div class="text-xs text-[#86868B]">${p.category || "Peralatan Industri"} ${selectedId === "all" ? `• ${p.eventName}` : ""}</div>
+              </td>
+              <td class="py-3.5 px-4">${tierPill}</td>
+              <td class="py-3.5 px-4 text-xs text-[#1D1D1F]">${p.promo || "Standar"}</td>
+              <td class="py-3.5 px-4 text-xs font-medium text-[#515154]">${p.pic || "—"}</td>
+              <td class="py-3.5 px-4 text-right text-xs font-medium text-[#86868B]">${formatIDRCompact(p.target)}</td>
+              <td class="py-3.5 px-4 text-right text-xs font-semibold text-[#1D1D1F]">${formatIDRCompact(p.achieved)}</td>
+              <td class="py-3.5 px-5 text-right">
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">${pct.toFixed(1)}%</span>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      // Render Evaluation Notes
+      const evalContainer = document.getElementById("evaluation-notes-list");
+      if (filteredEvents.length === 0) {
+          evalContainer.innerHTML = '<p class="text-xs text-[#86868B]">Belum ada catatan.</p>';
+      } else {
+        evalContainer.innerHTML = filteredEvents.map(evt => `
+          <div class="p-4 rounded-xl bg-[#FAFAFC] border border-black/[0.05]">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-[#1D1D1F]">${evt.name}</span>
+              <span class="text-[11px] text-[#86868B]">${evt.dates}</span>
+            </div>
+            <p class="text-xs text-[#515154] leading-relaxed">${evt.evaluationNotes || "Tidak ada catatan evaluasi lapangan."}</p>
+          </div>
+        `).join("");
+      }
+    }
+
+    // =========================================================================
+    // 6. VIEW 2: ADD / IMPORT EVENT HANDLERS
+    // =========================================================================
+    function addPartnerFormRow(prefill = {}) {
+      const container = document.getElementById("form-partners-container");
+      const row = document.createElement("div");
+      row.className = "partner-form-row p-3.5 rounded-xl bg-[#FAFAFC] border border-black/[0.06] grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center";
+      row.innerHTML = `
+        <div class="sm:col-span-3">
+          <input type="text" placeholder="Nama Mitra *" required value="${prefill.name || ""}" class="p-name apple-input bg-white w-full px-3 py-1.5 text-xs" />
+        </div>
+        <div class="sm:col-span-2">
+          <select class="p-tier apple-input bg-white w-full px-2.5 py-1.5 text-xs">
+            <option value="Priority" ${prefill.tier === "Priority" ? "selected" : ""}>Prioritas</option>
+            <option value="Standard" ${prefill.tier === "Standard" ? "selected" : ""}>Standar</option>
+          </select>
+        </div>
+        <div class="sm:col-span-2">
+          <input type="text" placeholder="Skema Promo" value="${prefill.promo || ""}" class="p-promo apple-input bg-white w-full px-3 py-1.5 text-xs" />
+        </div>
+        <div class="sm:col-span-2">
+          <input type="number" placeholder="Target (Rp)" required value="${prefill.target || ""}" class="p-target apple-input bg-white w-full px-3 py-1.5 text-xs" />
+        </div>
+        <div class="sm:col-span-2">
+          <input type="number" placeholder="Tercapai (Rp)" required value="${prefill.achieved || ""}" class="p-achieved apple-input bg-white w-full px-3 py-1.5 text-xs" />
+        </div>
+        <div class="sm:col-span-1 flex justify-end">
+          <button type="button" onclick="this.closest('.partner-form-row').remove()" class="text-[#86868B] hover:text-[#FF3B30] p-1" title="Hapus baris">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      `;
+      container.appendChild(row);
+    }
+
+    function resetManualForm() {
+      document.getElementById("manual-event-form").reset();
+      document.getElementById("form-partners-container").innerHTML = "";
+      addPartnerFormRow();
+    }
+
+    function saveManualEvent(e) {
+      e.preventDefault();
+      const name = document.getElementById("form-event-name").value.trim();
+      const venue = document.getElementById("form-event-venue").value.trim();
+      const dates = document.getElementById("form-event-dates").value.trim();
+      const dailyStaff = Number(document.getElementById("form-event-staff").value) || 10;
+      const evaluationNotes = document.getElementById("form-event-notes").value.trim();
+
+      const rows = document.querySelectorAll(".partner-form-row");
+      const partners = [];
+      rows.forEach(row => {
+        const pName = row.querySelector(".p-name").value.trim();
+        if (pName) {
+          partners.push({
+            name: pName,
+            category: "Mitra Pameran",
+            tier: row.querySelector(".p-tier").value,
+            promo: row.querySelector(".p-promo").value.trim() || "Tarif Standar",
+            pic: "Tim Terkait",
+            target: Number(row.querySelector(".p-target").value) || 0,
+            achieved: Number(row.querySelector(".p-achieved").value) || 0
+          });
+        }
+      });
+
+      if (partners.length === 0) {
+        showToast("Silakan tambahkan setidaknya satu baris mitra.", "error");
+        return;
+      }
+
+      const newEvt = {
+        id: "evt-" + Date.now(),
+        name,
+        dates,
+        venue,
+        dailyStaff,
+        partners,
+        evaluationNotes: evaluationNotes || "Terekam via Entri Manual ENCE."
+      };
+
+      state.events.unshift(newEvt);
+      saveState();
+      populateEventDropdown();
+      resetManualForm();
+      showToast(`Menyimpan "${name}" ke ENCE!`);
+      switchTab("overview");
+    }
+
+    function downloadSampleCSV() {
+      const csvContent = [
+        "Nama Acara,Lokasi Gedung,Tanggal,Nama Mitra,Kategori,Tingkat,Skema Promo,PIC,Target,Tercapai,Catatan Evaluasi",
+        "Pameran Kemasan Asia 2025,Hall B JCC,10-13 Jun 2025,PT Kemasan Jaya,Mesin Kemasan,Prioritas,Subsidi Penuh 12b,Rina,12000000000,10800000000,Tiba sebelum jam 08:30 pagi untuk tempat banner strategis.",
+        "Pameran Kemasan Asia 2025,Hall B JCC,10-13 Jun 2025,Sistem Segel Nova,Teknologi Segel,Standar,Promo DP 10%,Budi,5000000000,2100000000,Berikan arahan (briefing) ke tim sales 1 hari sebelum buka."
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ENCE_Contoh_Templat_Acara.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Mengunduh templat CSV ENCE.");
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet);
+
+          if (!rows || rows.length === 0) {
+            showToast("Spreadsheet yang diunggah tampak kosong.", "error");
+            return;
+          }
+
+          // Group rows by Event Name
+          const grouped = {};
+          rows.forEach(r => {
+            const evtName = r["Nama Acara"] || r["Event Name"] || r["EVENT"] || file.name.replace(/\.[^/.]+$/, "");
+            if (!grouped[evtName]) {
+              grouped[evtName] = {
+                id: "evt-imp-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+                name: evtName,
+                venue: r["Lokasi Gedung"] || r["Venue"] || r["VENUE"] || "Pusat Pameran",
+                dates: r["Tanggal"] || r["Dates"] || r["DATE"] || "Catatan Impor",
+                dailyStaff: 10,
+                partners: [],
+                evaluationNotes: r["Catatan Evaluasi"] || r["Evaluation Notes"] || r["EVALUASI"] || "Diimpor dari spreadsheet."
+              };
+            }
+            const tierStr = (r["Tingkat"] || r["Tier"] || r["STATUS"] || "").toLowerCase();
+            grouped[evtName].partners.push({
+              name: r["Nama Mitra"] || r["Partner Name"] || r["SUPPLIER"] || "Booth Mitra",
+              category: r["Kategori"] || r["Category"] || r["MERK"] || "Peralatan",
+              tier: tierStr.includes("pri") || tierStr === "ps" ? "Priority" : "Standard",
+              promo: r["Skema Promo"] || r["Promo Scheme"] || r["PROGRAM"] || "Standar",
+              pic: r["PIC"] || r["AO"] || "Tim",
+              target: Number(r["Target"] || r["BUDGET"] || 0),
+              achieved: Number(r["Tercapai"] || r["Achieved"] || r["ACHIEVE"] || 0)
+            });
+          });
+
+          const importedEvents = Object.values(grouped);
+          state.events = [...importedEvents, ...state.events];
+          saveState();
+          populateEventDropdown();
+          showToast(`Berhasil mengimpor ${importedEvents.length} acara!`);
+          switchTab("overview");
+        } catch (err) {
+          showToast("Gagal membaca file. Gunakan format CSV templat.", "error");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // =========================================================================
+    // 7. VIEW 3: TOOLS & SERIALIZED ASSET INVENTORY
+    // =========================================================================
+    function renderToolsView() {
+      // Sync Magnetic Signs counts from serialized tags
+      const magTags = state.tags.filter(t => t.category === "MAG");
+      const magMissing = magTags.filter(t => t.status === "Hilang").length;
+      const magInUse = magTags.filter(t => t.status === "Dipakai").length;
+      const magItem = state.inventory.find(i => i.id === "inv-mag");
+      if (magItem) {
+        magItem.total = magTags.length;
+        magItem.missing = magMissing;
+        magItem.available = magTags.length - magMissing - magInUse;
+      }
+
+      const cardsGrid = document.getElementById("inventory-cards-grid");
+      cardsGrid.innerHTML = state.inventory.map(item => {
+        const isOut = item.available === 0;
+        const hasMissing = item.missing > 0;
+        const pct = item.total > 0 ? Math.round((item.available / item.total) * 100) : 0;
+
+        let badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">Ada Stok</span>`;
+        let barColor = "bg-[#34C759]";
+
+        if (isOut) {
+          badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]">Stok Kosong</span>`;
+          barColor = "bg-[#FF3B30]";
+        } else if (hasMissing) {
+          badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF9500]/15 text-[#B25E00]">${item.missing} Hilang</span>`;
+          barColor = "bg-[#FF9500]";
+        }
+
+        const consumableControls = item.type === "Habis Pakai" ? `
+          <div class="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-black/[0.05]">
+            <button onclick="adjustConsumable('${item.id}', -10)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">-10</button>
+            <button onclick="adjustConsumable('${item.id}', 50)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">+50 Restok</button>
+          </div>
+        ` : "";
+
+        return `
+          <div class="bento-card p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="text-[10px] font-semibold uppercase tracking-wider text-[#86868B]">${item.type}</span>
+                  <h3 class="text-sm font-bold text-[#1D1D1F] mt-0.5">${item.name}</h3>
+                </div>
+                ${badge}
+              </div>
+
+              <div class="mt-3 flex items-baseline justify-between">
+                <span class="text-2xl font-bold text-[#1D1D1F]">${item.available}</span>
+                <span class="text-xs text-[#86868B]">dari ${item.total} ${item.unit}</span>
+              </div>
+
+              <div class="w-full h-1.5 bg-[#F5F5F7] rounded-full mt-2 overflow-hidden">
+                <div class="${barColor} h-full rounded-full transition-all" style="width: ${pct}%"></div>
+              </div>
+            </div>
+            ${consumableControls}
+          </div>
+        `;
+      }).join("");
+
+      // Render Serialized Asset Tags
+      const catFilter = document.getElementById("asset-category-filter").value;
+      const filteredTags = catFilter === "all"
+        ? state.tags
+        : state.tags.filter(t => t.category === catFilter);
+
+      const tagContainer = document.getElementById("serialized-tags-container");
+      tagContainer.innerHTML = filteredTags.map(tag => {
+        let style = "bg-[#34C759]/12 text-[#1D6F32] border-[#34C759]/30";
+        if (tag.status === "Dipakai") style = "bg-[#0071E3]/12 text-[#005BB5] border-[#0071E3]/30";
+        if (tag.status === "Hilang") style = "bg-[#FF3B30]/15 text-[#D70015] border-[#FF3B30]/40 font-bold";
+
+        return `
+          <button onclick="cycleTagStatus('${tag.code}')" title="Klik ubah status (${tag.status})" class="py-2 px-1.5 rounded-xl border text-[11px] font-medium text-center transition-transform active:scale-95 ${style}">
+            <div>${tag.code}</div>
+            <div class="text-[9px] opacity-80 mt-0.5">${tag.status}</div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function cycleTagStatus(code) {
+      const tag = state.tags.find(t => t.code === code);
+      if (!tag) return;
+      const order = ["Tersedia", "Dipakai", "Hilang"];
+      const nextIdx = (order.indexOf(tag.status) + 1) % order.length;
+      tag.status = order[nextIdx];
+      saveState();
+      renderToolsView();
+      renderDashboard();
+      showToast(`${code} ditandai sebagai ${tag.status}`);
+    }
+
+    function adjustConsumable(id, delta) {
+      const item = state.inventory.find(i => i.id === id);
+      if (!item) return;
+      item.available = Math.max(0, item.available + delta);
+      if (item.available > item.total) item.total = item.available;
+      saveState();
+      renderToolsView();
+      renderDashboard();
+      showToast(`Memperbarui stok ${item.name} menjadi ${item.available} buah.`);
+    }
+
+    // =========================================================================
+    // 8. VIEW 4: AI PRE-EVENT STRATEGIST & CHECKLIST GENERATOR
+    // =========================================================================
+    function generatePreEventPlaybook() {
+      const evtName = document.getElementById("ai-event-name").value.trim() || "Pameran Mendatang";
+      const evtType = document.getElementById("ai-event-type").value;
+      const partnerCount = Math.max(1, Number(document.getElementById("ai-partner-count").value) || 8);
+      const durationDays = Math.max(1, Number(document.getElementById("ai-duration-days").value) || 4);
+
+      // Calculate hardware kit with +10% spare buffer
+      const bannersNeeded = Math.ceil(partnerCount * 1.1);
+      const magnetsNeeded = Math.ceil(partnerCount * 3 * 1.1);
+      const standsNeeded = Math.ceil(partnerCount * 1.1);
+      const recommendedStaff = Math.max(4, Math.ceil(partnerCount * 1.4));
+
+      // Check live stock levels
+      const tumblerItem = state.inventory.find(i => i.id === "inv-tmb");
+      const magTagsMissing = state.tags.filter(t => t.category === "MAG" && t.status === "Hilang").map(t => t.code);
+
+      const toolsList = document.getElementById("playbook-tools-list");
+      toolsList.innerHTML = `
+        <li class="flex items-center justify-between py-1.5 border-b border-black/[0.05]">
+          <span class="text-[#1D1D1F] font-medium">Standing & X-Banners (incl. +10% cadangan)</span>
+          <span class="font-bold text-[#0071E3]">${bannersNeeded} buah</span>
+        </li>
+        <li class="flex items-center justify-between py-1.5 border-b border-black/[0.05]">
+          <span class="text-[#1D1D1F] font-medium">Tanda Magnetik (Mix Kecil / Sedang / Besar)</span>
+          <span class="font-bold text-[#0071E3]">${magnetsNeeded} buah</span>
+        </li>
+        <li class="flex items-center justify-between py-1.5 border-b border-black/[0.05]">
+          <span class="text-[#1D1D1F] font-medium">Display Meja Akrilik (Stan T & L)</span>
+          <span class="font-bold text-[#0071E3]">${standsNeeded} buah</span>
+        </li>
+        <li class="flex items-center justify-between py-1.5">
+          <span class="text-[#1D1D1F] font-medium">Suvenir Pulpen & Tas Kertas (Paperbag)</span>
+          <span class="font-bold text-[#1D1D1F]">${partnerCount * 40} set</span>
+        </li>
+      `;
+
+      const stockWarning = document.getElementById("playbook-stock-warning");
+      const warnings = [];
+      if (tumblerItem && tumblerItem.available === 0) {
+        warnings.push("<strong>Botol Minum Termos stok 0</strong> — segera order ulang jika ada rencana hadiah mitra VIP.");
+      }
+      if (magTagsMissing.length > 0) {
+        warnings.push(`<strong>${magTagsMissing.length} Tanda Magnetik (${magTagsMissing.join(", ")})</strong> saat ini berstatus Hilang.`);
+      }
+      stockWarning.innerHTML = warnings.length > 0
+        ? warnings.join("<br/>")
+        : "<strong>Stok inventaris gudang sehat</strong> — barang cukup untuk acara ini.";
+
+      // Partner & Staffing Strategy from live metrics
+      let allPartners = [];
+      state.events.forEach(e => allPartners.push(...e.partners));
+      const pri = allPartners.filter(p => p.tier === "Priority");
+      const std = allPartners.filter(p => p.tier !== "Priority");
+      const priRate = pri.reduce((s, p) => s + p.target, 0) > 0
+        ? ((pri.reduce((s, p) => s + p.achieved, 0) / pri.reduce((s, p) => s + p.target, 0)) * 100).toFixed(1)
+        : "75.0";
+      const stdRate = std.reduce((s, p) => s + p.target, 0) > 0
+        ? ((std.reduce((s, p) => s + p.achieved, 0) / std.reduce((s, p) => s + p.target, 0)) * 100).toFixed(1)
+        : "18.0";
+
+      document.getElementById("playbook-strategy-content").innerHTML = `
+        <div class="p-3 rounded-xl bg-[#FAFAFC] border border-black/[0.05]">
+          <div class="font-semibold text-[#1D1D1F] mb-1">1. Tempatkan PIC Senior di Booth Tier-1</div>
+          <p class="text-[#515154]">Secara historis, Mitra Prioritas mengkonversi di <strong>${priRate}%</strong> dibanding <strong>${stdRate}%</strong> pada booth Standar. Dedikasikan 1 PIC senior per booth Prioritas selama ${durationDays} hari.</p>
+        </div>
+        <div class="p-3 rounded-xl bg-[#FAFAFC] border border-black/[0.05]">
+          <div class="font-semibold text-[#1D1D1F] mb-1">2. Pimpin dengan Promo Subsidi Konversi Tinggi</div>
+          <p class="text-[#515154]">Booth unggulan berhasil menggunakan penawaran <strong>DP Rendah 10% + Masa Tenggang 3 Bulan</strong> dan <strong>Subsidi Tarif Penuh</strong>. Cetak tabel cicilan di setiap magnet.</p>
+        </div>
+      `;
+      document.getElementById("playbook-staff-rec").textContent = `${recommendedStaff} PICs / Hari`;
+
+      // Interactive Chronological Checklist
+      const checklistTasks = [
+        { id: "chk-1", timing: "H-7 Hari", text: "Finalisasi desain banner & magnet berbagai ukuran (sertakan info cicilan mencolok & kode QR)." },
+        { id: "chk-2", timing: "H-3 Hari", text: "Selesaikan pencetakan semua bahan promosi 1 hari penuh sebelum pengarahan tim (briefing) terakhir." },
+        { id: "chk-3", timing: "H-1 Hari", text: "Lakukan pengarahan skema promo 1-lawan-1 dengan tenaga penjualan (sales) booth mitra agar sejajar." },
+        { id: "chk-4", timing: "H-1 Hari", text: "Verifikasi kalkulator harga offline & akses VPN untuk persetujuan cepat oleh tim di kantor." },
+        { id: "chk-5", timing: "Hari H 08:00 AM", text: "Tiba sebelum pukul 09:00 pagi untuk mengamankan lokasi banner utama dan hindari gangguan rute / penempatan kabel di atas kepala." },
+        { id: "chk-6", timing: "Ops Harian", text: "Bagikan voucher makan individu (Rp 25rb/orang) untuk menghilangkan waktu kosong meninggalkan booth." }
+      ];
+
+      const listEl = document.getElementById("playbook-checklist-items");
+      listEl.innerHTML = checklistTasks.map(task => {
+        const checked = !!state.checklistStates[task.id];
+        return `
+          <label class="flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-[#FAFAFC] border border-black/[0.04] cursor-pointer transition-colors">
+            <input type="checkbox" ${checked ? "checked" : ""} onchange="toggleChecklistItem('${task.id}')" class="mt-0.5 rounded accent-[#0071E3] w-4 h-4 cursor-pointer" />
+            <div class="text-xs leading-snug ${checked ? "line-through text-[#86868B]" : "text-[#1D1D1F]"}">
+              <span class="font-bold text-[#0071E3] mr-1">[${task.timing}]</span>
+              <span>${task.text}</span>
+            </div>
+          </label>
+        `;
+      }).join("");
+
+      updateChecklistPill(checklistTasks);
+    }
+
+    function toggleChecklistItem(id) {
+      state.checklistStates[id] = !state.checklistStates[id];
+      saveState();
+      generatePreEventPlaybook();
+    }
+
+    function updateChecklistPill(tasks) {
+      const done = tasks.filter(t => state.checklistStates[t.id]).length;
+      document.getElementById("checklist-progress-pill").textContent = `${done} / ${tasks.length} Selesai`;
+    }
+
+    function copyPlaybookSummary() {
+      const evtName = document.getElementById("ai-event-name").value.trim();
+      const text = `PANDUAN PRA-ACARA ENCE: ${evtName}\n` +
+        Array.from(document.querySelectorAll("#playbook-checklist-items label")).map(l => "- " + l.innerText.trim()).join("\n");
+
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+      showToast("Panduan berhasil disalin ke clipboard!");
+    }
+
+    // =========================================================================
+    // 9. INITIALIZATION
+    // =========================================================================
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      populateEventDropdown();
+      renderDashboard();
+      renderToolsView();
+      addPartnerFormRow();
+      generatePreEventPlaybook();
+    });
+  </script>
+</body>
+</html>
