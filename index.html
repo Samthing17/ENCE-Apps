@@ -15,9 +15,13 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- SheetJS for real .xlsx and .csv spreadsheet parsing -->
+  <!-- SheetJS for real .xlsx and .csv spreadsheet parsing & exporting -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-  <!-- Inter font fallback for non-Apple OS -->
+  <!-- Firebase SDK (Compat for clean single-file integration) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <!-- Inter font fallback -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -157,6 +161,12 @@
 
         <!-- Primary Action Button -->
         <div class="flex items-center gap-2 order-2 lg:order-3">
+          <!-- Cloud Sync Status Pill -->
+          <button id="cloud-status-btn" onclick="openCloudSettingsModal()" class="bg-white hover:bg-[#FAFAFC] border border-black/[0.08] text-xs font-medium px-3 py-2 rounded-full shadow-sm transition-all flex items-center gap-1.5" title="Pengaturan Sinkronisasi Cloud & Akun">
+            <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-[#FF9500]"></span>
+            <span id="cloud-status-text" class="hidden md:inline text-[#1D1D1F]">Mode Lokal</span>
+          </button>
+
           <button id="install-app-btn" onclick="installPWA()" class="hidden bg-[#34C759] hover:bg-[#248A3D] text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-full shadow-sm transition-all flex items-center gap-1.5">
             <span>Instal Aplikasi</span>
           </button>
@@ -182,17 +192,35 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F]">Ringkasan Eksekutif</h1>
-          <p class="text-sm text-[#86868B] mt-0.5">Jangkauan mitra, konversi pendapatan, dan intelijen lapangan pameran.</p>
+          <p class="text-sm text-[#86868B] mt-0.5">Jangkauan mitra, konversi anggaran, dan intelijen lapangan lintas pameran.</p>
         </div>
 
-        <!-- Event Selector Pill Dropdown -->
-        <div class="flex items-center gap-2 bg-white px-3.5 py-2 rounded-full border border-black/[0.06] shadow-sm self-start sm:self-auto">
-          <svg class="w-4 h-4 text-[#86868B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-          </svg>
-          <select id="event-filter-select" onchange="renderDashboard()" class="bg-transparent text-sm font-medium text-[#1D1D1F] focus:outline-none pr-2 cursor-pointer truncate max-w-[200px] sm:max-w-xs">
-            <option value="all">Semua Acara Digabung</option>
-          </select>
+        <!-- Event Selector Pill Dropdown & Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          <div class="flex items-center gap-2 bg-white px-3.5 py-2 rounded-full border border-black/[0.06] shadow-sm">
+            <svg class="w-4 h-4 text-[#86868B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            <select id="event-filter-select" onchange="renderDashboard()" class="bg-transparent text-sm font-medium text-[#1D1D1F] focus:outline-none pr-2 cursor-pointer truncate max-w-[180px] sm:max-w-xs">
+              <option value="all">Semua Acara Digabung</option>
+            </select>
+          </div>
+
+          <!-- Export to Excel Button -->
+          <button onclick="exportInsightsToExcel()" class="bg-white hover:bg-[#FAFAFC] active:scale-[0.98] text-[#1D1D1F] border border-black/[0.08] text-xs sm:text-sm font-medium px-3.5 py-2 rounded-full shadow-sm transition-all flex items-center gap-1.5" title="Unduh Laporan Excel">
+            <svg class="w-4 h-4 text-[#34C759]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            <span>Unduh Excel</span>
+          </button>
+
+          <!-- Delete Data Button (2-Step Verification) -->
+          <button onclick="openDeleteModal()" class="bg-white hover:bg-[#FF3B30]/5 active:scale-[0.98] text-[#FF3B30] border border-[#FF3B30]/20 text-xs sm:text-sm font-medium px-3.5 py-2 rounded-full shadow-sm transition-all flex items-center gap-1.5" title="Hapus Data Acara">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+            </svg>
+            <span>Hapus Data</span>
+          </button>
         </div>
       </div>
 
@@ -383,6 +411,7 @@
                 <th class="py-3 px-4 text-right">Target</th>
                 <th class="py-3 px-4 text-right">Tercapai</th>
                 <th class="py-3 px-5 text-right whitespace-nowrap">Pencapaian (%)</th>
+                <th class="py-3 px-4 text-center whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody id="partner-table-body" class="divide-y divide-black/[0.05] text-sm">
@@ -463,7 +492,7 @@
               <h2 class="text-base font-semibold text-[#1D1D1F]">Entri Acara Manual</h2>
               <p class="text-xs text-[#86868B]">Rekam pameran yang telah selesai atau yang akan datang ke sistem ENCE</p>
             </div>
-            <span class="text-xs text-[#86868B]">Semua data tersimpan lokal</span>
+            <span class="text-xs text-[#86868B]">Tersimpan otomatis</span>
           </div>
 
           <!-- Step 1: Event Basics -->
@@ -528,7 +557,7 @@
           <p class="text-sm text-[#86868B] mt-0.5">Lacak perangkat pameran, label aset berseri, dan stok barang promosi.</p>
         </div>
 
-        <div class="flex items-center gap-2 text-xs">
+        <div class="flex flex-wrap items-center gap-2 text-xs">
           <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/[0.06]">
             <span class="w-2 h-2 rounded-full bg-[#34C759]"></span> Tersedia
           </span>
@@ -538,6 +567,9 @@
           <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/[0.06]">
             <span class="w-2 h-2 rounded-full bg-[#FF3B30]"></span> Hilang
           </span>
+          <button onclick="openAddInventoryModal()" class="bg-[#0071E3] hover:bg-[#0077ED] active:scale-[0.98] text-white font-semibold px-3.5 py-1.5 rounded-full shadow-sm transition-all flex items-center gap-1 ml-1">
+            <span>+ Tambah Item Baru</span>
+          </button>
         </div>
       </div>
 
@@ -554,12 +586,18 @@
             <p class="text-xs text-[#86868B] mt-0.5">Klik tag aset untuk mengubah status: <strong class="text-[#1D1D1F]">Tersedia → Dipakai → Hilang</strong></p>
           </div>
 
-          <select id="asset-category-filter" onchange="renderToolsView()" class="apple-input px-3 py-1.5 text-xs font-medium text-[#1D1D1F] cursor-pointer self-start sm:self-auto">
-            <option value="all">Semua Perangkat</option>
-            <option value="MAG">Tanda Magnetik (MAG)</option>
-            <option value="BNR">Spanduk / Banner (Besar & Kecil)</option>
-            <option value="ACR">Stan Akrilik (T & L)</option>
-          </select>
+          <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <select id="asset-category-filter" onchange="renderToolsView()" class="apple-input px-3 py-1.5 text-xs font-medium text-[#1D1D1F] cursor-pointer">
+              <option value="all">Semua Perangkat</option>
+              <option value="MAG">Tanda Magnetik (MAG)</option>
+              <option value="BNR">Spanduk / Banner (BNR)</option>
+              <option value="ACR">Stan Akrilik (ACR)</option>
+            </select>
+
+            <button onclick="openAddTagModal()" class="bg-[#1D1D1F] hover:bg-black active:scale-[0.98] text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm transition-all flex items-center gap-1">
+              <span>+ Tambah Tag</span>
+            </button>
+          </div>
         </div>
 
         <div id="serialized-tags-container" class="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-2.5">
@@ -676,98 +714,373 @@
 
   <!-- Subtle Footer with Sample Data Reset -->
   <footer class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-black/[0.05] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#86868B]">
-    <div>ENCE — Intelijen Acara & Pameran • Ruang Kerja Lokal (Offline-First)</div>
-    <button onclick="resetAllData()" class="hover:text-[#FF3B30] transition-colors underline">Reset Data Sampel Asli</button>
+    <div id="footer-storage-label">ENCE — Intelijen Acara & Pameran • Ruang Kerja Lokal (Offline-First)</div>
+    <div class="flex items-center gap-4">
+      <button onclick="openCloudSettingsModal()" class="text-[#0071E3] hover:underline font-medium">Hubungkan Cloud & Akun</button>
+      <button onclick="resetAllData()" class="hover:text-[#FF3B30] transition-colors underline">Reset Data Sampel Asli</button>
+    </div>
   </footer>
 
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+  <!-- ===================================================================== -->
+  <!-- MODAL: 2-STEP DELETE DATA VERIFICATION                                -->
+  <!-- ===================================================================== -->
+  <div id="delete-modal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/[0.08] space-y-4">
+      <div class="flex items-start gap-3">
+        <div id="delete-modal-icon" class="w-10 h-10 rounded-full bg-[#FF9500]/15 text-[#FF9500] flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        </div>
+        <div>
+          <span id="delete-step-badge" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF9500]/15 text-[#B25E00]">Verifikasi Tahap 1 dari 2</span>
+          <h3 id="delete-modal-title" class="text-base font-bold text-[#1D1D1F] mt-1">Apakah Anda yakin ingin menghapus data?</h3>
+          <p id="delete-modal-desc" class="text-xs text-[#515154] mt-1 leading-relaxed">Data yang dihapus tidak dapat dipulihkan secara otomatis kecuali Anda mereset ke data sampel awal.</p>
+        </div>
+      </div>
+
+      <!-- Step 2 Extra Confirmation Checkbox -->
+      <div id="delete-step2-box" class="hidden p-3.5 rounded-xl bg-[#FF3B30]/10 border border-[#FF3B30]/20 space-y-2.5">
+        <p class="text-xs font-semibold text-[#D70015]">Peringatan Terakhir: Tindakan ini bersifat permanen!</p>
+        <label class="flex items-start gap-2 cursor-pointer text-xs text-[#1D1D1F]">
+          <input type="checkbox" id="delete-confirm-checkbox" onchange="toggleFinalDeleteBtn()" class="mt-0.5 accent-[#FF3B30] w-4 h-4 cursor-pointer" />
+          <span>Ya, saya memahami konsekuensinya dan setuju menghapus data terpilih secara permanen.</span>
+        </label>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/[0.06]">
+        <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 rounded-full text-xs font-semibold text-[#515154] hover:bg-black/5 transition-colors">
+          Batal
+        </button>
+        <button id="delete-step1-btn" type="button" onclick="proceedToDeleteStep2()" class="px-4 py-2 rounded-full text-xs font-semibold bg-[#FF9500] hover:bg-[#E68600] text-white transition-colors">
+          Lanjutkan ke Verifikasi Akhir →
+        </button>
+        <button id="delete-step2-btn" type="button" disabled onclick="executeDeleteData()" class="hidden px-4 py-2 rounded-full text-xs font-semibold bg-[#FF3B30] hover:bg-[#D70015] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all">
+          Hapus Permanen Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: CLOUD SYNC & SECURE LOGIN (FIREBASE)                           -->
+  <!-- ===================================================================== -->
+  <div id="cloud-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/[0.08] space-y-5 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-black/[0.06] pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-[#0071E3]/10 text-[#0071E3] flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-[#1D1D1F]">Sinkronisasi Cloud & Keamanan</h3>
+            <p class="text-xs text-[#86868B]">Hubungkan HP & Laptop dengan Akun Pribadi</p>
+          </div>
+        </div>
+        <button id="close-cloud-modal-btn" type="button" onclick="closeCloudSettingsModal()" class="text-[#86868B] hover:text-[#1D1D1F] p-1">✕</button>
+      </div>
+
+      <!-- STEP A: Firebase Config Setup (Shown if not configured yet) -->
+      <div id="cloud-setup-section" class="space-y-3">
+        <div class="p-3 rounded-xl bg-[#0071E3]/10 text-xs text-[#1D1D1F] leading-relaxed">
+          <strong>Cara Kerja Aman:</strong> Tempel konfigurasi proyek Google Firebase gratis Anda di bawah ini. Setelah terhubung, semua perangkat wajib login menggunakan Email & Kata Sandi Anda untuk mengakses data.
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Tempel Kode `firebaseConfig` (JSON / JS Object) *</label>
+          <textarea id="firebase-config-input" rows="5" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "proyek-anda.firebaseapp.com",
+  "projectId": "proyek-anda",
+  "storageBucket": "proyek-anda.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456:web:abcdef"
+}' class="apple-input w-full p-3 text-xs font-mono"></textarea>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" onclick="saveFirebaseConfig()" class="w-full py-2.5 px-4 rounded-full text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm">
+            Simpan & Lanjutkan ke Login
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP B: Login Form (Shown when config exists, user not logged in) -->
+      <form id="cloud-login-section" onsubmit="handleCloudLogin(event)" class="hidden space-y-3.5">
+        <div class="p-3 rounded-xl bg-[#FAFAFC] border border-black/[0.06] text-xs text-[#515154]">
+          Database Cloud aktif. Masuk menggunakan akun pribadi Anda untuk menyinkronkan data HP & Laptop secara otomatis.
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Email Akun *</label>
+          <input type="email" id="cloud-login-email" required placeholder="nama@perusahaan.com" class="apple-input w-full px-3.5 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Kata Sandi *</label>
+          <input type="password" id="cloud-login-password" required placeholder="••••••••" class="apple-input w-full px-3.5 py-2 text-sm" />
+        </div>
+        <button type="submit" id="cloud-login-submit" class="w-full py-2.5 px-4 rounded-full text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm">
+          Masuk & Sinkronkan Data
+        </button>
+        <div class="pt-2 flex items-center justify-between text-[11px] text-[#86868B]">
+          <button type="button" onclick="resetFirebaseConfig()" class="hover:text-[#FF3B30] underline">Ganti Konfigurasi Firebase</button>
+          <button type="button" onclick="closeCloudSettingsModal()" class="hover:text-[#1D1D1F]">Gunakan Offline Saja</button>
+        </div>
+      </form>
+
+      <!-- STEP C: Connected Account Info (Shown when logged in) -->
+      <div id="cloud-connected-section" class="hidden space-y-4">
+        <div class="p-4 rounded-xl bg-[#34C759]/10 border border-[#34C759]/25 space-y-1">
+          <div class="flex items-center gap-2 text-xs font-bold text-[#248A3D]">
+            <span class="w-2 h-2 rounded-full bg-[#34C759]"></span>
+            <span>Sinkronisasi Cloud Real-Time Aktif</span>
+          </div>
+          <p class="text-xs text-[#1D1D1F] pt-1">Masuk sebagai: <strong id="connected-user-email">—</strong></p>
+          <p class="text-[11px] text-[#515154]">Setiap perubahan di HP akan langsung muncul di laptop/website dalam hitungan detik.</p>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <button type="button" onclick="pushLocalToCloud(false)" class="w-full py-2 px-4 rounded-full text-xs font-semibold bg-[#F5F5F7] hover:bg-black/10 text-[#1D1D1F]">
+            Paksa Unggah Data Lokal ke Cloud Sekarang
+          </button>
+          <button type="button" onclick="handleCloudLogout()" class="w-full py-2 px-4 rounded-full text-xs font-semibold text-[#FF3B30] hover:bg-[#FF3B30]/10">
+            Keluar (Logout) dari Cloud
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Tambah Item Inventaris Baru -->
+  <div id="add-inv-modal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <form onsubmit="saveNewInventoryItem(event)" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/[0.08] space-y-4">
+      <div class="flex items-center justify-between border-b border-black/[0.06] pb-3">
+        <div>
+          <h3 class="text-base font-bold text-[#1D1D1F]">Tambah Item Inventaris Baru</h3>
+          <p class="text-xs text-[#86868B]">Tambahkan perangkat pakai ulang atau barang habis pakai</p>
+        </div>
+        <button type="button" onclick="closeAddInventoryModal()" class="text-[#86868B] hover:text-[#1D1D1F] p-1">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Nama Barang / Perangkat *</label>
+          <input type="text" id="new-inv-name" required placeholder="Cth. Meja Lipat Booth / Brosur A4" class="apple-input w-full px-3.5 py-2 text-sm" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Jenis Barang *</label>
+            <select id="new-inv-type" class="apple-input w-full px-3 py-2 text-sm cursor-pointer">
+              <option value="Pakai Ulang">Pakai Ulang</option>
+              <option value="Habis Pakai">Habis Pakai</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Satuan *</label>
+            <input type="text" id="new-inv-unit" required value="buah" placeholder="buah / rim / dus" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Jumlah Total *</label>
+            <input type="number" id="new-inv-total" required min="1" value="10" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Stok Tersedia *</label>
+            <input type="number" id="new-inv-avail" required min="0" value="10" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/[0.06]">
+        <button type="button" onclick="closeAddInventoryModal()" class="px-4 py-2 rounded-full text-xs font-semibold text-[#515154] hover:bg-black/5">Batal</button>
+        <button type="submit" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm">Simpan Barang</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal: Tambah Tag Berseri Baru -->
+  <div id="add-tag-modal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <form onsubmit="saveNewSerializedTags(event)" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/[0.08] space-y-4">
+      <div class="flex items-center justify-between border-b border-black/[0.06] pb-3">
+        <div>
+          <h3 class="text-base font-bold text-[#1D1D1F]">Tambah Tag Perangkat Berseri</h3>
+          <p class="text-xs text-[#86868B]">Buat kode nomor seri baru secara otomatis</p>
+        </div>
+        <button type="button" onclick="closeAddTagModal()" class="text-[#86868B] hover:text-[#1D1D1F] p-1">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Kategori Perangkat *</label>
+          <select id="new-tag-category" onchange="updateTagPrefixPreview()" class="apple-input w-full px-3 py-2 text-sm cursor-pointer">
+            <option value="MAG">Tanda Magnetik (MAG)</option>
+            <option value="BNR">Spanduk / Banner (BNR)</option>
+            <option value="ACR">Stan Akrilik (ACR)</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Awalan Kode *</label>
+            <input type="text" id="new-tag-prefix" required value="MAG-" class="apple-input w-full px-3.5 py-2 text-sm uppercase" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Jumlah Tag Baru *</label>
+            <input type="number" id="new-tag-qty" required min="1" max="50" value="4" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+        </div>
+        <p id="new-tag-preview" class="text-[11px] text-[#0071E3] bg-[#0071E3]/10 px-3 py-2 rounded-xl font-medium">
+          Contoh kode yang akan dibuat: MAG-37, MAG-38, ...
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/[0.06]">
+        <button type="button" onclick="closeAddTagModal()" class="px-4 py-2 rounded-full text-xs font-semibold text-[#515154] hover:bg-black/5">Batal</button>
+        <button type="submit" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1D1D1F] hover:bg-black text-white shadow-sm">Buat Tag</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal: Konfirmasi Hapus Item Inventaris -->
+  <div id="delete-inv-modal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-black/[0.08] space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-[#FF3B30]/15 text-[#FF3B30] flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-[#1D1D1F]">Hapus Item Inventaris?</h3>
+          <p id="delete-inv-name" class="text-xs text-[#86868B] mt-0.5">Item akan dihapus dari daftar.</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button type="button" onclick="closeDeleteInvModal()" class="px-4 py-2 rounded-full text-xs font-semibold text-[#515154] hover:bg-black/5">Batal</button>
+        <button type="button" onclick="confirmDeleteInventoryItem()" class="px-4 py-2 rounded-full text-xs font-semibold bg-[#FF3B30] hover:bg-[#D70015] text-white">Hapus Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Data Mitra / Peserta Pameran -->
+  <div id="edit-partner-modal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <form onsubmit="saveEditedPartner(event)" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-black/[0.08] space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-black/[0.06] pb-3">
+        <div>
+          <h3 class="text-base font-bold text-[#1D1D1F]">Edit Data Booth Mitra</h3>
+          <p id="edit-partner-event-label" class="text-xs text-[#86868B]">Acara Pameran</p>
+        </div>
+        <button type="button" onclick="closeEditPartnerModal()" class="text-[#86868B] hover:text-[#1D1D1F] p-1">✕</button>
+      </div>
+
+      <input type="hidden" id="edit-partner-evt-id" />
+      <input type="hidden" id="edit-partner-idx" />
+
+      <div class="space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Nama Mitra / Peserta *</label>
+            <input type="text" id="edit-p-name" required class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Kategori Industri</label>
+            <input type="text" id="edit-p-category" placeholder="Cth. CNC & Logam" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Tingkat Mitra *</label>
+            <select id="edit-p-tier" class="apple-input w-full px-3 py-2 text-sm cursor-pointer">
+              <option value="Priority">Prioritas (Tier-1)</option>
+              <option value="Standard">Standar</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">PIC Utama</label>
+            <input type="text" id="edit-p-pic" placeholder="Nama PIC" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Skema Promo</label>
+          <input type="text" id="edit-p-promo" placeholder="Cth. Subsidi Penuh / DP 10%" class="apple-input w-full px-3.5 py-2 text-sm" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Target Anggaran (Rp) *</label>
+            <input type="number" id="edit-p-target" required min="0" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#1D1D1F] mb-1">Tercapai / Realisasi (Rp) *</label>
+            <input type="number" id="edit-p-achieved" required min="0" class="apple-input w-full px-3.5 py-2 text-sm" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-black/[0.06]">
+        <button type="button" onclick="deleteSinglePartnerFromModal()" class="px-3.5 py-2 rounded-full text-xs font-semibold text-[#FF3B30] hover:bg-[#FF3B30]/10 transition-colors">
+          Hapus Mitra Ini
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeEditPartnerModal()" class="px-4 py-2 rounded-full text-xs font-semibold text-[#515154] hover:bg-black/5">Batal</button>
+          <button type="submit" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm">Simpan Perubahan</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
   <script>
     // =========================================================================
-    // 0. PWA SERVICE WORKER REGISTRATION (MAKE IT INSTALLABLE APP)
-    // =========================================================================
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        self.addEventListener('install', e => self.skipWaiting());
-        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-        self.addEventListener('fetch', e => {
-          e.respondWith(fetch(e.request).catch(() => new Response('Offline - Aplikasi ENCE bekerja di mode luring (offline)')));
-        });
-      `;
-      const swBlob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob))
-        .catch(err => console.log('SW Registration failed', err));
-    }
-
-    // Handle "Add to Home Screen" prompt for the user
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const installBtn = document.getElementById('install-app-btn');
-      if (installBtn) installBtn.classList.remove('hidden');
-    });
-
-    function installPWA() {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the A2HS prompt');
-        }
-        deferredPrompt = null;
-        document.getElementById('install-app-btn').classList.add('hidden');
-      });
-    }
-
-    // =========================================================================
-    // 1. DEFAULT PRE-LOADED REALISTIC SAMPLE DATA (BRAND-NEUTRAL)
+    // 1. DEFAULT PRE-LOADED REALISTIC SAMPLE DATA
     // =========================================================================
     const DEFAULT_EVENTS = [
       {
         id: "evt-plastics-2024",
-        name: "Pameran Plastik & Karet 2024",
+        name: "Plastics & Rubber Expo 2024",
         dates: "20–23 Nov 2024",
         venue: "Hall A Convention Center",
         dailyStaff: 10,
         partners: [
-          { name: "Grup Mesin LK", category: "Cetakan Injeksi", tier: "Priority", promo: "Subsidi Penuh 13.5%, DP 20%", pic: "Hendra", target: 10000000000, achieved: 2269031000, tools: "1 Banner Besar, 2 Magnet, 3 Stan Akrilik" },
-          { name: "Peralatan Bilplast", category: "Mesin Tiup", tier: "Standard", promo: "Subsidi Sebagian, Tenor 12-36b", pic: "Adi", target: 5000000000, achieved: 1150000000, tools: "1 Banner Besar, 4 Magnet" },
-          { name: "Teknologi Mahatanee", category: "Ekstrusi", tier: "Standard", promo: "Tarif Standar 13.5%", pic: "Adi", target: 3000000000, achieved: 420000000, tools: "1 Banner, 2 Magnet" }
+          { name: "LK Machinery Group", category: "Injection Molding", tier: "Priority", promo: "Subsidi Penuh 13.5%, DP 20%", pic: "Hendra", target: 10000000000, achieved: 2269031000, tools: "1 Spanduk Besar, 2 Magnet, 3 Stan Akrilik" },
+          { name: "Bilplast Equipment", category: "Blow Molding", tier: "Standard", promo: "Subsidi Parsial, Tenor 12-36b", pic: "Adi", target: 5000000000, achieved: 1150000000, tools: "1 Spanduk Besar, 4 Magnet" },
+          { name: "Mahatanee Tech", category: "Extrusion", tier: "Standard", promo: "Tarif Standar 13.5%", pic: "Adi", target: 3000000000, achieved: 420000000, tools: "1 Spanduk, 2 Magnet" }
         ],
-        evaluationNotes: "Selesaikan desain spanduk dan magnet 1 hari sebelum pertemuan pra-acara terakhir. Jangan menggantung spanduk di dekat kabel di atas kepala karena staf bisa memindahkannya. Tambahkan info cicilan mencolok dan kode QR kontak di magnet."
+        evaluationNotes: "Selesaikan desain spanduk dan magnet 1 hari sebelum rapat pra-acara terakhir. Jangan menggantung spanduk di dekat kabel atas yang rawan dipindahkan staf. Tambahkan info cicilan tebal dan kode QR kontak pada magnet."
       },
       {
         id: "evt-manufacturing-2024",
-        name: "Pameran Manufaktur Internasional 2024",
+        name: "International Manufacturing Expo 2024",
         dates: "4–7 Des 2024",
-        venue: "Balai Pameran Utama",
+        venue: "Main Exhibition Hall",
         dailyStaff: 12,
         partners: [
-          { name: "First Machinery Corp", category: "CNC & Logam", tier: "Priority", promo: "DP 10% + Masa Tenggang 3 Bulan", pic: "Johan", target: 20000000000, achieved: 19887737000, tools: "5 Magnet, 2 Stan Akrilik" },
-          { name: "Industri Yamazen", category: "Alat Presisi", tier: "Priority", promo: "Subsidi Penuh", pic: "Deky", target: 10000000000, achieved: 9631996000, tools: "4 Magnet" },
-          { name: "Teknika Logam Jaya", category: "Lembaran Logam", tier: "Priority", promo: "Tarif Rata Khusus (Flat)", pic: "Albert", target: 5000000000, achieved: 4649600000, tools: "2 Banner" },
-          { name: "Grup Multi Otano", category: "Robotika & Las", tier: "Priority", promo: "Subsidi Penuh 12-36b", pic: "Oscar", target: 10000000000, achieved: 5303815000, tools: "2 Banner" },
-          { name: "Mesin Riyadi", category: "Mesin Umum", tier: "Standard", promo: "Tarif Standar", pic: "Deky", target: 10000000000, achieved: 2378175000, tools: "1 Banner, 3 Magnet, 1 Stan Akrilik" },
-          { name: "Teknologi Frisindo", category: "Sistem Kemasan", tier: "Standard", promo: "Tarif Standar", pic: "Deky", target: 10000000000, achieved: 955710000, tools: "2 X-Banner, 3 Magnet" }
+          { name: "First Machinery Corp", category: "CNC & Logam", tier: "Priority", promo: "DP 10% + Masa Tenggang 3B", pic: "Johan", target: 20000000000, achieved: 19887737000, tools: "5 Magnet, 2 Stan Akrilik" },
+          { name: "Yamazen Industrial", category: "Alat Presisi", tier: "Priority", promo: "Subsidi Penuh", pic: "Deky", target: 10000000000, achieved: 9631996000, tools: "4 Magnet" },
+          { name: "Jaya Metal Teknika", category: "Lembaran Logam", tier: "Priority", promo: "Tarif Flat Khusus", pic: "Albert", target: 5000000000, achieved: 4649600000, tools: "2 Spanduk" },
+          { name: "Otano Multi Group", category: "Robotika & Las", tier: "Priority", promo: "Subsidi Penuh 12-36b", pic: "Oscar", target: 10000000000, achieved: 5303815000, tools: "2 Spanduk" },
+          { name: "Riyadi Machinery", category: "Mesin Umum", tier: "Standard", promo: "Tarif Standar", pic: "Deky", target: 10000000000, achieved: 2378175000, tools: "1 Spanduk, 3 Magnet, 1 Stan Akrilik" },
+          { name: "Frisindo Tech", category: "Sistem Kemasan", tier: "Standard", promo: "Tarif Standar", pic: "Deky", target: 10000000000, achieved: 955710000, tools: "2 X-Banner, 3 Magnet" }
         ],
-        evaluationNotes: "Tiba setelah jam 9 pagi menyebabkan hilangnya tempat pajangan utama karena direbut pesaing. Tim penjualan mitra memerlukan pengarahan promo 1 lawan 1 sebelum Hari ke-1. Sediakan voucher makan individu (Rp 25.000/orang) untuk mempercepat perputaran tim di lapangan. Siapkan magnet kecil/sedang/besar agar sesuai dengan berbagai ukuran mesin."
+        evaluationNotes: "Datang setelah pukul 09.00 pagi menyebabkan hilangnya titik pajang strategis ke kompetitor. Tim sales mitra butuh briefing promo 1-lawan-1 sebelum Hari-1. Sediakan voucher makan perorangan (Rp 25.000/orang) alih-alih beli makanan massal. Siapkan magnet ukuran kecil/sedang/besar."
       }
     ];
 
     const DEFAULT_INVENTORY = [
       { id: "inv-mag", name: "Tanda Magnetik", type: "Pakai Ulang", total: 36, available: 31, missing: 5, unit: "buah" },
-      { id: "inv-bnr-l", name: "Banner Besar", type: "Pakai Ulang", total: 4, available: 4, missing: 0, unit: "buah" },
-      { id: "inv-bnr-s", name: "Banner Kecil", type: "Pakai Ulang", total: 11, available: 11, missing: 0, unit: "buah" },
-      { id: "inv-acr-t", name: "Akrilik T-Stand", type: "Pakai Ulang", total: 8, available: 8, missing: 0, unit: "buah" },
-      { id: "inv-acr-l", name: "Akrilik L-Stand", type: "Pakai Ulang", total: 5, available: 5, missing: 0, unit: "buah" },
-      { id: "inv-brd", name: "Papan Nama", type: "Pakai Ulang", total: 20, available: 20, missing: 0, unit: "buah" },
+      { id: "inv-bnr-l", name: "Spanduk Besar", type: "Pakai Ulang", total: 4, available: 4, missing: 0, unit: "buah" },
+      { id: "inv-bnr-s", name: "Spanduk Kecil", type: "Pakai Ulang", total: 11, available: 11, missing: 0, unit: "buah" },
+      { id: "inv-acr-t", name: "Stan Akrilik T", type: "Pakai Ulang", total: 8, available: 8, missing: 0, unit: "buah" },
+      { id: "inv-acr-l", name: "Stan Akrilik L", type: "Pakai Ulang", total: 5, available: 5, missing: 0, unit: "buah" },
+      { id: "inv-brd", name: "Papan Nama Booth", type: "Pakai Ulang", total: 20, available: 20, missing: 0, unit: "buah" },
       { id: "inv-vst", name: "Rompi Staf", type: "Pakai Ulang", total: 46, available: 46, missing: 0, unit: "buah" },
-      { id: "inv-lny", name: "Lanyard (Tali ID)", type: "Pakai Ulang", total: 51, available: 51, missing: 0, unit: "buah" },
-      { id: "inv-pen", name: "Pulpen Branding", type: "Habis Pakai", total: 504, available: 504, missing: 0, unit: "buah" },
-      { id: "inv-bag", name: "Tas Kertas (Paperbag)", type: "Habis Pakai", total: 500, available: 500, missing: 0, unit: "buah" },
-      { id: "inv-tmb", name: "Botol Minum Termos", type: "Habis Pakai", total: 100, available: 0, missing: 0, unit: "buah" }
+      { id: "inv-lny", name: "Tali Lanyard", type: "Pakai Ulang", total: 51, available: 51, missing: 0, unit: "buah" },
+      { id: "inv-pen", name: "Pulpen Promosi", type: "Habis Pakai", total: 504, available: 504, missing: 0, unit: "buah" },
+      { id: "inv-bag", name: "Tas Kertas", type: "Habis Pakai", total: 500, available: 500, missing: 0, unit: "buah" },
+      { id: "inv-tmb", name: "Botol Minum VIP", type: "Habis Pakai", total: 100, available: 0, missing: 0, unit: "buah" }
     ];
 
     function buildDefaultTags() {
@@ -794,7 +1107,44 @@
     }
 
     // =========================================================================
-    // 2. STATE & LOCALSTORAGE MANAGEMENT
+    // 2. PWA INSTALL PROMPT & SERVICE WORKER
+    // =========================================================================
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('install-app-btn');
+      if (installBtn) installBtn.classList.remove('hidden');
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          const installBtn = document.getElementById('install-app-btn');
+          if (installBtn) installBtn.classList.add('hidden');
+        });
+      } else {
+        showToast('Buka menu browser Anda dan pilih "Tambahkan ke Layar Utama" untuk memasang aplikasi.');
+      }
+    }
+
+    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+      const swCode = `
+        self.addEventListener('install', (e) => { self.skipWaiting(); });
+        self.addEventListener('activate', (e) => { return self.clients.claim(); });
+        self.addEventListener('fetch', (e) => {
+          e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        });
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).catch(() => {});
+    }
+
+    // =========================================================================
+    // 3. STATE, LOCALSTORAGE & FIREBASE CLOUD SYNC MANAGEMENT
     // =========================================================================
     let state = {
       events: [],
@@ -803,12 +1153,19 @@
       checklistStates: {}
     };
 
+    let firebaseApp = null;
+    let firebaseAuth = null;
+    let firebaseDb = null;
+    let currentCloudUser = null;
+    let unsubscribeFirestore = null;
+    let isApplyingCloudUpdate = false;
+
     function loadState() {
       try {
-        const savedEvents = localStorage.getItem("ence_events_v2_id");
-        const savedInv = localStorage.getItem("ence_inventory_v2_id");
-        const savedTags = localStorage.getItem("ence_tags_v2_id");
-        const savedChecks = localStorage.getItem("ence_checks_v2_id");
+        const savedEvents = localStorage.getItem("ence_events_id_v1");
+        const savedInv = localStorage.getItem("ence_inventory_id_v1");
+        const savedTags = localStorage.getItem("ence_tags_id_v1");
+        const savedChecks = localStorage.getItem("ence_checks_id_v1");
 
         state.events = savedEvents ? JSON.parse(savedEvents) : JSON.parse(JSON.stringify(DEFAULT_EVENTS));
         state.inventory = savedInv ? JSON.parse(savedInv) : JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
@@ -823,30 +1180,237 @@
 
     function saveState() {
       try {
-        localStorage.setItem("ence_events_v2_id", JSON.stringify(state.events));
-        localStorage.setItem("ence_inventory_v2_id", JSON.stringify(state.inventory));
-        localStorage.setItem("ence_tags_v2_id", JSON.stringify(state.tags));
-        localStorage.setItem("ence_checks_v2_id", JSON.stringify(state.checklistStates));
+        localStorage.setItem("ence_events_id_v1", JSON.stringify(state.events));
+        localStorage.setItem("ence_inventory_id_v1", JSON.stringify(state.inventory));
+        localStorage.setItem("ence_tags_id_v1", JSON.stringify(state.tags));
+        localStorage.setItem("ence_checks_id_v1", JSON.stringify(state.checklistStates));
       } catch (e) {
         console.warn("Storage quota warning", e);
+      }
+
+      if (currentCloudUser && firebaseDb && !isApplyingCloudUpdate) {
+        pushLocalToCloud(true);
       }
     }
 
     function resetAllData() {
-      localStorage.removeItem("ence_events_v2_id");
-      localStorage.removeItem("ence_inventory_v2_id");
-      localStorage.removeItem("ence_tags_v2_id");
-      localStorage.removeItem("ence_checks_v2_id");
+      localStorage.removeItem("ence_events_id_v1");
+      localStorage.removeItem("ence_inventory_id_v1");
+      localStorage.removeItem("ence_tags_id_v1");
+      localStorage.removeItem("ence_checks_id_v1");
       loadState();
+      if (currentCloudUser && firebaseDb) {
+        pushLocalToCloud(true);
+      }
       populateEventDropdown();
       renderDashboard();
       renderToolsView();
       generatePreEventPlaybook();
-      showToast("Data sampel dipulihkan kembali.");
+      showToast("Data sampel berhasil dipulihkan ke pengaturan awal.");
+    }
+
+    function parseFirebaseConfigInput(rawText) {
+      let cleaned = rawText.trim();
+      const firstBrace = cleaned.indexOf("{");
+      const lastBrace = cleaned.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+      }
+      cleaned = cleaned.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+      cleaned = cleaned.replace(/,\s*}/g, "}");
+      return JSON.parse(cleaned);
+    }
+
+    function initFirebaseFromSavedConfig() {
+      const rawCfg = localStorage.getItem("ence_firebase_config_v1");
+      if (!rawCfg || typeof firebase === "undefined") {
+        updateCloudStatusUI("local");
+        return;
+      }
+      try {
+        const config = JSON.parse(rawCfg);
+        if (!firebase.apps.length) {
+          firebaseApp = firebase.initializeApp(config);
+        } else {
+          firebaseApp = firebase.app();
+        }
+        firebaseAuth = firebase.auth();
+        firebaseDb = firebase.firestore();
+
+        firebaseAuth.onAuthStateChanged((user) => {
+          currentCloudUser = user;
+          if (user) {
+            updateCloudStatusUI("connected", user.email);
+            startRealtimeCloudListener(user.uid);
+          } else {
+            if (unsubscribeFirestore) {
+              unsubscribeFirestore();
+              unsubscribeFirestore = null;
+            }
+            updateCloudStatusUI("locked");
+            openCloudSettingsModal();
+          }
+        });
+      } catch (err) {
+        console.error("Firebase init error:", err);
+        updateCloudStatusUI("local");
+      }
+    }
+
+    function updateCloudStatusUI(mode, email = "") {
+      const dot = document.getElementById("cloud-status-dot");
+      const text = document.getElementById("cloud-status-text");
+      const footerLabel = document.getElementById("footer-storage-label");
+
+      if (mode === "connected") {
+        dot.className = "w-2 h-2 rounded-full bg-[#34C759]";
+        text.textContent = "Cloud Tersinkron";
+        if (footerLabel) footerLabel.textContent = `ENCE • Tersinkronisasi Aman (${email})`;
+      } else if (mode === "locked") {
+        dot.className = "w-2 h-2 rounded-full bg-[#FF3B30]";
+        text.textContent = "Perlu Login Cloud";
+        if (footerLabel) footerLabel.textContent = "ENCE • Cloud Terkunci (Silakan Login)";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-[#FF9500]";
+        text.textContent = "Mode Lokal";
+        if (footerLabel) footerLabel.textContent = "ENCE — Intelijen Acara & Pameran • Ruang Kerja Lokal (Offline-First)";
+      }
+    }
+
+    function openCloudSettingsModal() {
+      const rawCfg = localStorage.getItem("ence_firebase_config_v1");
+      const setupSec = document.getElementById("cloud-setup-section");
+      const loginSec = document.getElementById("cloud-login-section");
+      const connSec = document.getElementById("cloud-connected-section");
+
+      setupSec.classList.add("hidden");
+      loginSec.classList.add("hidden");
+      connSec.classList.add("hidden");
+
+      if (!rawCfg) {
+        setupSec.classList.remove("hidden");
+      } else if (!currentCloudUser) {
+        loginSec.classList.remove("hidden");
+      } else {
+        document.getElementById("connected-user-email").textContent = currentCloudUser.email || "Akun Terverifikasi";
+        connSec.classList.remove("hidden");
+      }
+
+      document.getElementById("cloud-modal").classList.remove("hidden");
+    }
+
+    function closeCloudSettingsModal() {
+      document.getElementById("cloud-modal").classList.add("hidden");
+    }
+
+    function saveFirebaseConfig() {
+      const raw = document.getElementById("firebase-config-input").value;
+      try {
+        const parsed = parseFirebaseConfigInput(raw);
+        if (!parsed.apiKey || !parsed.projectId) {
+          showToast("Konfigurasi tidak lengkap. Pastikan apiKey dan projectId ada.", "error");
+          return;
+        }
+        localStorage.setItem("ence_firebase_config_v1", JSON.stringify(parsed));
+        showToast("Konfigurasi Firebase disimpan! Silakan login.");
+        initFirebaseFromSavedConfig();
+        openCloudSettingsModal();
+      } catch (e) {
+        showToast("Format konfigurasi tidak dikenali. Salin bagian firebaseConfig dari Firebase Console.", "error");
+      }
+    }
+
+    function resetFirebaseConfig() {
+      localStorage.removeItem("ence_firebase_config_v1");
+      if (firebaseAuth) firebaseAuth.signOut().catch(() => {});
+      currentCloudUser = null;
+      updateCloudStatusUI("local");
+      openCloudSettingsModal();
+      showToast("Konfigurasi Cloud dihapus. Kembali ke Mode Lokal.");
+    }
+
+    function handleCloudLogin(e) {
+      e.preventDefault();
+      if (!firebaseAuth) return;
+      const email = document.getElementById("cloud-login-email").value.trim();
+      const password = document.getElementById("cloud-login-password").value;
+      const btn = document.getElementById("cloud-login-submit");
+      btn.disabled = true;
+      btn.textContent = "Memeriksa Akun...";
+
+      firebaseAuth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          showToast("Berhasil masuk! Menyinkronkan data...");
+          closeCloudSettingsModal();
+        })
+        .catch((err) => {
+          showToast("Login gagal: " + (err.message || "Periksa email & kata sandi Anda."), "error");
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.textContent = "Masuk & Sinkronkan Data";
+        });
+    }
+
+    function handleCloudLogout() {
+      if (!firebaseAuth) return;
+      firebaseAuth.signOut().then(() => {
+        showToast("Anda telah keluar dari akun Cloud.");
+        openCloudSettingsModal();
+      });
+    }
+
+    function startRealtimeCloudListener(uid) {
+      if (!firebaseDb) return;
+      if (unsubscribeFirestore) unsubscribeFirestore();
+
+      const docRef = firebaseDb.collection("ence_workspaces").doc(uid);
+      unsubscribeFirestore = docRef.onSnapshot((docSnap) => {
+        if (docSnap.exists) {
+          const cloudData = docSnap.data();
+          isApplyingCloudUpdate = true;
+          if (Array.isArray(cloudData.events)) state.events = cloudData.events;
+          if (Array.isArray(cloudData.inventory)) state.inventory = cloudData.inventory;
+          if (Array.isArray(cloudData.tags)) state.tags = cloudData.tags;
+          if (cloudData.checklistStates) state.checklistStates = cloudData.checklistStates;
+
+          localStorage.setItem("ence_events_id_v1", JSON.stringify(state.events));
+          localStorage.setItem("ence_inventory_id_v1", JSON.stringify(state.inventory));
+          localStorage.setItem("ence_tags_id_v1", JSON.stringify(state.tags));
+          localStorage.setItem("ence_checks_id_v1", JSON.stringify(state.checklistStates));
+
+          populateEventDropdown();
+          renderDashboard();
+          renderToolsView();
+          generatePreEventPlaybook();
+          isApplyingCloudUpdate = false;
+        } else {
+          pushLocalToCloud(true);
+        }
+      }, (err) => {
+        console.error("Firestore sync error:", err);
+        showToast("Gagal membaca database cloud. Periksa Rules di Firebase.", "error");
+      });
+    }
+
+    function pushLocalToCloud(silent = false) {
+      if (!currentCloudUser || !firebaseDb) return;
+      const docRef = firebaseDb.collection("ence_workspaces").doc(currentCloudUser.uid);
+      docRef.set({
+        events: state.events,
+        inventory: state.inventory,
+        tags: state.tags,
+        checklistStates: state.checklistStates,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).then(() => {
+        if (!silent) showToast("Seluruh data berhasil diunggah ke Cloud!");
+      }).catch((err) => {
+        if (!silent) showToast("Gagal mengunggah ke Cloud: " + err.message, "error");
+      });
     }
 
     // =========================================================================
-    // 3. CURRENCY & FORMATTING HELPERS
+    // 4. CURRENCY & FORMATTING HELPERS
     // =========================================================================
     function formatIDRCompact(num) {
       if (!num || isNaN(num)) return "Rp 0";
@@ -856,7 +1420,7 @@
       if (num >= 1_000_000) {
         return `Rp ${(num / 1_000_000).toFixed(1)}M`;
       }
-      return "Rp " + num.toLocaleString("id-ID");
+      return "Rp " + Number(num).toLocaleString("id-ID");
     }
 
     function showToast(message, type = "info") {
@@ -874,12 +1438,13 @@
     }
 
     // =========================================================================
-    // 4. NAVIGATION CONTROLLER
+    // 5. NAVIGATION CONTROLLER
     // =========================================================================
     function switchTab(tabId) {
       const views = ["overview", "add-event", "tools", "ai-checklist"];
       views.forEach(v => {
-        document.getElementById(`view-${v}`).classList.toggle("hidden", v !== tabId);
+        const el = document.getElementById(`view-${v}`);
+        if (el) el.classList.toggle("hidden", v !== tabId);
         const btn = document.getElementById(`tab-${v}`);
         if (btn) btn.classList.toggle("active", v === tabId);
       });
@@ -890,7 +1455,7 @@
     }
 
     // =========================================================================
-    // 5. VIEW 1: EXECUTIVE BENTO DASHBOARD RENDERER
+    // 6. VIEW 1: EXECUTIVE BENTO DASHBOARD RENDERER
     // =========================================================================
     function populateEventDropdown() {
       const select = document.getElementById("event-filter-select");
@@ -924,8 +1489,8 @@
 
       filteredEvents.forEach(evt => {
         totalStaff += (evt.dailyStaff || 10);
-        evt.partners.forEach(p => {
-          allPartners.push({ ...p, eventName: evt.name });
+        evt.partners.forEach((p, idx) => {
+          allPartners.push({ ...p, eventId: evt.id, partnerIndex: idx, eventName: evt.name });
           totalTarget += Number(p.target || 0);
           totalAchieved += Number(p.achieved || 0);
         });
@@ -936,14 +1501,14 @@
       // Asset health calculation from live tags + inventory
       const missingTagsCount = state.tags.filter(t => t.status === "Hilang").length;
       const lowStockCount = state.inventory.filter(i => i.available === 0).length;
-      const totalAlerts = (missingTagsCount > 0 ? 1 : 0) + (lowStockCount > 0 ? 1 : 0);
+      const totalAlerts = (missingTagsCount > 0 ? 1 : 0) + lowStockCount;
       const totalHardware = state.tags.length;
       const healthyHardware = totalHardware - missingTagsCount;
       const assetHealthPct = totalHardware > 0 ? ((healthyHardware / totalHardware) * 100).toFixed(1) : "100.0";
 
       // Update KPI Cards
       document.getElementById("kpi-events-count").textContent = filteredEvents.length;
-      document.getElementById("kpi-events-sub").textContent = `${allPartners.length} Booth Mitra`;
+      document.getElementById("kpi-events-sub").textContent = `${allPartners.length} Booth Mitra Pameran`;
       document.getElementById("kpi-target-amount").textContent = formatIDRCompact(totalTarget);
       document.getElementById("kpi-achieved-amount").textContent = formatIDRCompact(totalAchieved);
       document.getElementById("kpi-achievement-badge").textContent = `${overallPct.toFixed(1)}%`;
@@ -954,7 +1519,7 @@
       document.getElementById("kpi-asset-badge").className = totalAlerts > 0
         ? "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]"
         : "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]";
-      document.getElementById("kpi-asset-sub").textContent = `${missingTagsCount} Tag Hilang • ${lowStockCount} Habis Stok`;
+      document.getElementById("kpi-asset-sub").textContent = `${missingTagsCount} Tag Hilang • ${lowStockCount} Stok Habis`;
 
       // Update nav red dot
       document.getElementById("nav-alert-dot").classList.toggle("hidden", totalAlerts === 0);
@@ -1000,6 +1565,9 @@
         const topPct = top.target > 0 ? ((top.achieved / top.target) * 100).toFixed(1) : "0.0";
         document.getElementById("scope-top-partner").textContent = `${top.name} (${topPct}%)`;
         document.getElementById("scope-top-promo").textContent = top.promo || "Subsidi Penuh";
+      } else {
+        document.getElementById("scope-top-partner").textContent = "—";
+        document.getElementById("scope-top-promo").textContent = "—";
       }
       const avgStaff = filteredEvents.length > 0 ? Math.round(totalStaff / filteredEvents.length) : 0;
       document.getElementById("scope-avg-staff").textContent = `${avgStaff} PICs / Hari`;
@@ -1017,7 +1585,7 @@
 
       const tbody = document.getElementById("partner-table-body");
       if (visiblePartners.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-xs text-[#86868B]">Tidak ada booth mitra yang sesuai dengan filter Anda.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-xs text-[#86868B]">Tidak ada booth mitra yang sesuai dengan filter Anda.</td></tr>`;
       } else {
         tbody.innerHTML = visiblePartners.map(p => {
           const pct = p.target > 0 ? ((p.achieved / p.target) * 100) : 0;
@@ -1044,6 +1612,14 @@
               <td class="py-3.5 px-5 text-right">
                 <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">${pct.toFixed(1)}%</span>
               </td>
+              <td class="py-3.5 px-4 text-center">
+                <button onclick="openEditPartnerModal('${p.eventId}', ${p.partnerIndex})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F5F5F7] hover:bg-[#0071E3] text-[#1D1D1F] hover:text-white transition-colors" title="Edit data mitra ini">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                  </svg>
+                  <span>Edit</span>
+                </button>
+              </td>
             </tr>
           `;
         }).join("");
@@ -1052,7 +1628,7 @@
       // Render Evaluation Notes
       const evalContainer = document.getElementById("evaluation-notes-list");
       if (filteredEvents.length === 0) {
-          evalContainer.innerHTML = '<p class="text-xs text-[#86868B]">Belum ada catatan.</p>';
+        evalContainer.innerHTML = `<div class="col-span-2 text-center py-6 text-xs text-[#86868B]">Belum ada catatan evaluasi untuk cakupan yang dipilih.</div>`;
       } else {
         evalContainer.innerHTML = filteredEvents.map(evt => `
           <div class="p-4 rounded-xl bg-[#FAFAFC] border border-black/[0.05]">
@@ -1060,14 +1636,14 @@
               <span class="text-xs font-bold text-[#1D1D1F]">${evt.name}</span>
               <span class="text-[11px] text-[#86868B]">${evt.dates}</span>
             </div>
-            <p class="text-xs text-[#515154] leading-relaxed">${evt.evaluationNotes || "Tidak ada catatan evaluasi lapangan."}</p>
+            <p class="text-xs text-[#515154] leading-relaxed">${evt.evaluationNotes || "Tidak ada catatan pasca-acara yang direkam."}</p>
           </div>
         `).join("");
       }
     }
 
     // =========================================================================
-    // 6. VIEW 2: ADD / IMPORT EVENT HANDLERS
+    // 7. VIEW 2: ADD / IMPORT EVENT HANDLERS
     // =========================================================================
     function addPartnerFormRow(prefill = {}) {
       const container = document.getElementById("form-partners-container");
@@ -1127,7 +1703,7 @@
             category: "Mitra Pameran",
             tier: row.querySelector(".p-tier").value,
             promo: row.querySelector(".p-promo").value.trim() || "Tarif Standar",
-            pic: "Tim Terkait",
+            pic: "Tim Terjadwal",
             target: Number(row.querySelector(".p-target").value) || 0,
             achieved: Number(row.querySelector(".p-achieved").value) || 0
           });
@@ -1135,7 +1711,7 @@
       });
 
       if (partners.length === 0) {
-        showToast("Silakan tambahkan setidaknya satu baris mitra.", "error");
+        showToast("Harap tambahkan setidaknya satu baris mitra.", "error");
         return;
       }
 
@@ -1146,32 +1722,32 @@
         venue,
         dailyStaff,
         partners,
-        evaluationNotes: evaluationNotes || "Terekam via Entri Manual ENCE."
+        evaluationNotes: evaluationNotes || "Dicatat melalui Entri Manual ENCE."
       };
 
       state.events.unshift(newEvt);
       saveState();
       populateEventDropdown();
       resetManualForm();
-      showToast(`Menyimpan "${name}" ke ENCE!`);
+      showToast(`Berhasil menyimpan "${name}" ke ENCE!`);
       switchTab("overview");
     }
 
     function downloadSampleCSV() {
       const csvContent = [
-        "Nama Acara,Lokasi Gedung,Tanggal,Nama Mitra,Kategori,Tingkat,Skema Promo,PIC,Target,Tercapai,Catatan Evaluasi",
-        "Pameran Kemasan Asia 2025,Hall B JCC,10-13 Jun 2025,PT Kemasan Jaya,Mesin Kemasan,Prioritas,Subsidi Penuh 12b,Rina,12000000000,10800000000,Tiba sebelum jam 08:30 pagi untuk tempat banner strategis.",
-        "Pameran Kemasan Asia 2025,Hall B JCC,10-13 Jun 2025,Sistem Segel Nova,Teknologi Segel,Standar,Promo DP 10%,Budi,5000000000,2100000000,Berikan arahan (briefing) ke tim sales 1 hari sebelum buka."
+        "Nama Acara,Lokasi,Tanggal,Nama Mitra,Kategori,Tingkat,Skema Promo,PIC,Target,Tercapai,Catatan Evaluasi",
+        "Pameran Kemasan Asia 2025,Hall B JCC,10-13 Jun 2025,Apex Packaging Corp,Mesin Kemas,Priority,Subsidi Penuh 12b,Rina,12000000000,10800000000,Datang sebelum 08:30 pagi untuk posisi spanduk strategis.",
+        "Pameran Kemasan Asia 2025,Hall B JCC,10-13 Jun 2025,Nova Seal Systems,Teknologi Segel,Standard,Promo DP 10%,Budi,5000000000,2100000000,Briefing tim sales mitra 1 hari sebelum pembukaan."
       ].join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "ENCE_Contoh_Templat_Acara.csv";
+      a.download = "Templat_Acara_ENCE.csv";
       a.click();
       URL.revokeObjectURL(url);
-      showToast("Mengunduh templat CSV ENCE.");
+      showToast("Templat CSV ENCE berhasil diunduh.");
     }
 
     function handleFileUpload(event) {
@@ -1191,7 +1767,6 @@
             return;
           }
 
-          // Group rows by Event Name
           const grouped = {};
           rows.forEach(r => {
             const evtName = r["Nama Acara"] || r["Event Name"] || r["EVENT"] || file.name.replace(/\.[^/.]+$/, "");
@@ -1199,18 +1774,18 @@
               grouped[evtName] = {
                 id: "evt-imp-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
                 name: evtName,
-                venue: r["Lokasi Gedung"] || r["Venue"] || r["VENUE"] || "Pusat Pameran",
-                dates: r["Tanggal"] || r["Dates"] || r["DATE"] || "Catatan Impor",
+                venue: r["Lokasi"] || r["Venue"] || r["VENUE"] || "Pusat Pameran Utama",
+                dates: r["Tanggal"] || r["Dates"] || r["DATE"] || "Data Impor",
                 dailyStaff: 10,
                 partners: [],
                 evaluationNotes: r["Catatan Evaluasi"] || r["Evaluation Notes"] || r["EVALUASI"] || "Diimpor dari spreadsheet."
               };
             }
-            const tierStr = (r["Tingkat"] || r["Tier"] || r["STATUS"] || "").toLowerCase();
+            const rawTier = (r["Tingkat"] || r["Tier"] || r["STATUS"] || "").toLowerCase();
             grouped[evtName].partners.push({
               name: r["Nama Mitra"] || r["Partner Name"] || r["SUPPLIER"] || "Booth Mitra",
               category: r["Kategori"] || r["Category"] || r["MERK"] || "Peralatan",
-              tier: tierStr.includes("pri") || tierStr === "ps" ? "Priority" : "Standard",
+              tier: rawTier.includes("pri") || rawTier === "ps" ? "Priority" : "Standard",
               promo: r["Skema Promo"] || r["Promo Scheme"] || r["PROGRAM"] || "Standar",
               pic: r["PIC"] || r["AO"] || "Tim",
               target: Number(r["Target"] || r["BUDGET"] || 0),
@@ -1225,50 +1800,95 @@
           showToast(`Berhasil mengimpor ${importedEvents.length} acara!`);
           switchTab("overview");
         } catch (err) {
-          showToast("Gagal membaca file. Gunakan format CSV templat.", "error");
+          showToast("Gagal membaca file. Gunakan format contoh CSV.", "error");
         }
       };
       reader.readAsArrayBuffer(file);
     }
 
     // =========================================================================
-    // 7. VIEW 3: TOOLS & SERIALIZED ASSET INVENTORY
+    // 8. VIEW 3: TOOLS & SERIALIZED ASSET INVENTORY
     // =========================================================================
-    function renderToolsView() {
-      // Sync Magnetic Signs counts from serialized tags
+    let pendingDeleteInvId = null;
+
+    function syncHardwareCountsFromTags() {
       const magTags = state.tags.filter(t => t.category === "MAG");
-      const magMissing = magTags.filter(t => t.status === "Hilang").length;
-      const magInUse = magTags.filter(t => t.status === "Dipakai").length;
       const magItem = state.inventory.find(i => i.id === "inv-mag");
       if (magItem) {
+        const missing = magTags.filter(t => t.status === "Hilang").length;
+        const inUse = magTags.filter(t => t.status === "Dipakai").length;
         magItem.total = magTags.length;
-        magItem.missing = magMissing;
-        magItem.available = magTags.length - magMissing - magInUse;
+        magItem.missing = missing;
+        magItem.available = Math.max(0, magTags.length - missing - inUse);
       }
+
+      const bnrLTags = state.tags.filter(t => t.code.startsWith("BNR-L"));
+      const bnrLItem = state.inventory.find(i => i.id === "inv-bnr-l");
+      if (bnrLItem && bnrLTags.length > 0) {
+        const missing = bnrLTags.filter(t => t.status === "Hilang").length;
+        const inUse = bnrLTags.filter(t => t.status === "Dipakai").length;
+        bnrLItem.total = bnrLTags.length;
+        bnrLItem.missing = missing;
+        bnrLItem.available = Math.max(0, bnrLTags.length - missing - inUse);
+      }
+
+      const bnrSTags = state.tags.filter(t => t.code.startsWith("BNR-S"));
+      const bnrSItem = state.inventory.find(i => i.id === "inv-bnr-s");
+      if (bnrSItem && bnrSTags.length > 0) {
+        const missing = bnrSTags.filter(t => t.status === "Hilang").length;
+        const inUse = bnrSTags.filter(t => t.status === "Dipakai").length;
+        bnrSItem.total = bnrSTags.length;
+        bnrSItem.missing = missing;
+        bnrSItem.available = Math.max(0, bnrSTags.length - missing - inUse);
+      }
+    }
+
+    function renderToolsView() {
+      syncHardwareCountsFromTags();
 
       const cardsGrid = document.getElementById("inventory-cards-grid");
       cardsGrid.innerHTML = state.inventory.map(item => {
         const isOut = item.available === 0;
         const hasMissing = item.missing > 0;
-        const pct = item.total > 0 ? Math.round((item.available / item.total) * 100) : 0;
+        const pct = item.total > 0 ? Math.min(100, Math.round((item.available / item.total) * 100)) : 0;
 
-        let badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">Ada Stok</span>`;
+        let badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">Tersedia</span>`;
         let barColor = "bg-[#34C759]";
 
         if (isOut) {
-          badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]">Stok Kosong</span>`;
+          badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]">Stok Habis</span>`;
           barColor = "bg-[#FF3B30]";
         } else if (hasMissing) {
           badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF9500]/15 text-[#B25E00]">${item.missing} Hilang</span>`;
           barColor = "bg-[#FF9500]";
         }
 
-        const consumableControls = item.type === "Habis Pakai" ? `
-          <div class="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-black/[0.05]">
-            <button onclick="adjustConsumable('${item.id}', -10)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">-10</button>
-            <button onclick="adjustConsumable('${item.id}', 50)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">+50 Restok</button>
+        const isTagSynced = ["inv-mag", "inv-bnr-l", "inv-bnr-s"].includes(item.id);
+        const stepBig = item.type === "Habis Pakai" ? 50 : 5;
+
+        const stockControls = isTagSynced ? `
+          <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-black/[0.05]">
+            <span class="text-[10px] text-[#86868B]">Otomatis dari matriks tag</span>
+            <button onclick="openDeleteInvModal('${item.id}')" class="text-[#86868B] hover:text-[#FF3B30] p-1 transition-colors" title="Hapus item">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
           </div>
-        ` : "";
+        ` : `
+          <div class="flex items-center justify-between gap-1.5 mt-3 pt-2.5 border-t border-black/[0.05]">
+            <div class="flex items-center gap-1">
+              <button onclick="adjustInventoryStock('${item.id}', -1)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">-1</button>
+              <button onclick="adjustInventoryStock('${item.id}', 1)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">+1</button>
+              <button onclick="adjustInventoryStock('${item.id}', ${stepBig})" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">+${stepBig}</button>
+            </div>
+            <button onclick="openDeleteInvModal('${item.id}')" class="text-[#86868B] hover:text-[#FF3B30] p-1 transition-colors" title="Hapus item">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
+          </div>
+        `;
 
         return `
           <div class="bento-card p-4 flex flex-col justify-between">
@@ -1290,7 +1910,7 @@
                 <div class="${barColor} h-full rounded-full transition-all" style="width: ${pct}%"></div>
               </div>
             </div>
-            ${consumableControls}
+            ${stockControls}
           </div>
         `;
       }).join("");
@@ -1308,10 +1928,15 @@
         if (tag.status === "Hilang") style = "bg-[#FF3B30]/15 text-[#D70015] border-[#FF3B30]/40 font-bold";
 
         return `
-          <button onclick="cycleTagStatus('${tag.code}')" title="Klik ubah status (${tag.status})" class="py-2 px-1.5 rounded-xl border text-[11px] font-medium text-center transition-transform active:scale-95 ${style}">
-            <div>${tag.code}</div>
-            <div class="text-[9px] opacity-80 mt-0.5">${tag.status}</div>
-          </button>
+          <div class="relative group">
+            <button onclick="cycleTagStatus('${tag.code}')" title="Klik untuk ganti status (${tag.status})" class="w-full py-2 px-1.5 rounded-xl border text-[11px] font-medium text-center transition-transform active:scale-95 ${style}">
+              <div>${tag.code}</div>
+              <div class="text-[9px] opacity-80 mt-0.5">${tag.status}</div>
+            </button>
+            <button onclick="removeSerializedTag('${tag.code}')" title="Hapus tag ${tag.code}" class="hidden group-hover:flex items-center justify-center absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#1D1D1F] hover:bg-[#FF3B30] text-white text-[9px] shadow">
+              ✕
+            </button>
+          </div>
         `;
       }).join("");
     }
@@ -1328,7 +1953,7 @@
       showToast(`${code} ditandai sebagai ${tag.status}`);
     }
 
-    function adjustConsumable(id, delta) {
+    function adjustInventoryStock(id, delta) {
       const item = state.inventory.find(i => i.id === id);
       if (!item) return;
       item.available = Math.max(0, item.available + delta);
@@ -1336,44 +1961,166 @@
       saveState();
       renderToolsView();
       renderDashboard();
-      showToast(`Memperbarui stok ${item.name} menjadi ${item.available} buah.`);
+      showToast(`Stok ${item.name} diperbarui menjadi ${item.available} ${item.unit}.`);
+    }
+
+    // --- Modal Handlers: Tambah Item Inventaris Baru ---
+    function openAddInventoryModal() {
+      document.getElementById("new-inv-name").value = "";
+      document.getElementById("new-inv-type").value = "Pakai Ulang";
+      document.getElementById("new-inv-unit").value = "buah";
+      document.getElementById("new-inv-total").value = "10";
+      document.getElementById("new-inv-avail").value = "10";
+      document.getElementById("add-inv-modal").classList.remove("hidden");
+    }
+
+    function closeAddInventoryModal() {
+      document.getElementById("add-inv-modal").classList.add("hidden");
+    }
+
+    function saveNewInventoryItem(e) {
+      e.preventDefault();
+      const name = document.getElementById("new-inv-name").value.trim();
+      const type = document.getElementById("new-inv-type").value;
+      const unit = document.getElementById("new-inv-unit").value.trim() || "buah";
+      const total = Math.max(1, Number(document.getElementById("new-inv-total").value) || 1);
+      const avail = Math.min(total, Math.max(0, Number(document.getElementById("new-inv-avail").value) || 0));
+
+      state.inventory.push({
+        id: "inv-custom-" + Date.now(),
+        name,
+        type,
+        total,
+        available: avail,
+        missing: 0,
+        unit
+      });
+
+      saveState();
+      renderToolsView();
+      renderDashboard();
+      closeAddInventoryModal();
+      showToast(`Item "${name}" berhasil ditambahkan!`);
+    }
+
+    // --- Modal Handlers: Hapus Item Inventaris ---
+    function openDeleteInvModal(id) {
+      const item = state.inventory.find(i => i.id === id);
+      if (!item) return;
+      pendingDeleteInvId = id;
+      document.getElementById("delete-inv-name").textContent = `"${item.name}" (${item.available}/${item.total} ${item.unit}) akan dihapus.`;
+      document.getElementById("delete-inv-modal").classList.remove("hidden");
+    }
+
+    function closeDeleteInvModal() {
+      pendingDeleteInvId = null;
+      document.getElementById("delete-inv-modal").classList.add("hidden");
+    }
+
+    function confirmDeleteInventoryItem() {
+      if (!pendingDeleteInvId) return;
+      const item = state.inventory.find(i => i.id === pendingDeleteInvId);
+      state.inventory = state.inventory.filter(i => i.id !== pendingDeleteInvId);
+      saveState();
+      renderToolsView();
+      renderDashboard();
+      closeDeleteInvModal();
+      showToast(`Item "${item ? item.name : ""}" telah dihapus.`);
+    }
+
+    // --- Modal Handlers: Tambah & Hapus Tag Berseri ---
+    function openAddTagModal() {
+      document.getElementById("new-tag-category").value = "MAG";
+      document.getElementById("new-tag-qty").value = "4";
+      updateTagPrefixPreview();
+      document.getElementById("add-tag-modal").classList.remove("hidden");
+    }
+
+    function closeAddTagModal() {
+      document.getElementById("add-tag-modal").classList.add("hidden");
+    }
+
+    function updateTagPrefixPreview() {
+      const cat = document.getElementById("new-tag-category").value;
+      const prefixInput = document.getElementById("new-tag-prefix");
+      const defaultPrefixes = { MAG: "MAG-", BNR: "BNR-S", ACR: "ACR-" };
+      prefixInput.value = defaultPrefixes[cat] || `${cat}-`;
+
+      const existingCount = state.tags.filter(t => t.code.startsWith(prefixInput.value)).length;
+      const next1 = `${prefixInput.value}${String(existingCount + 1).padStart(2, '0')}`;
+      const next2 = `${prefixInput.value}${String(existingCount + 2).padStart(2, '0')}`;
+      document.getElementById("new-tag-preview").textContent = `Contoh kode yang akan dibuat: ${next1}, ${next2}, ...`;
+    }
+
+    function saveNewSerializedTags(e) {
+      e.preventDefault();
+      const category = document.getElementById("new-tag-category").value;
+      const prefix = document.getElementById("new-tag-prefix").value.trim().toUpperCase();
+      const qty = Math.min(50, Math.max(1, Number(document.getElementById("new-tag-qty").value) || 1));
+
+      let startNum = state.tags.filter(t => t.code.startsWith(prefix)).length + 1;
+      let added = 0;
+
+      while (added < qty) {
+        const candidateCode = `${prefix}${String(startNum).padStart(2, '0')}`;
+        if (!state.tags.some(t => t.code === candidateCode)) {
+          state.tags.push({
+            code: candidateCode,
+            category,
+            status: "Tersedia"
+          });
+          added++;
+        }
+        startNum++;
+      }
+
+      saveState();
+      renderToolsView();
+      renderDashboard();
+      closeAddTagModal();
+      showToast(`${qty} tag berseri baru (${prefix}...) berhasil dibuat!`);
+    }
+
+    function removeSerializedTag(code) {
+      state.tags = state.tags.filter(t => t.code !== code);
+      saveState();
+      renderToolsView();
+      renderDashboard();
+      showToast(`Tag ${code} dihapus.`);
     }
 
     // =========================================================================
-    // 8. VIEW 4: AI PRE-EVENT STRATEGIST & CHECKLIST GENERATOR
+    // 9. VIEW 4: AI PRE-EVENT STRATEGIST & CHECKLIST GENERATOR
     // =========================================================================
     function generatePreEventPlaybook() {
       const evtName = document.getElementById("ai-event-name").value.trim() || "Pameran Mendatang";
-      const evtType = document.getElementById("ai-event-type").value;
       const partnerCount = Math.max(1, Number(document.getElementById("ai-partner-count").value) || 8);
       const durationDays = Math.max(1, Number(document.getElementById("ai-duration-days").value) || 4);
 
-      // Calculate hardware kit with +10% spare buffer
       const bannersNeeded = Math.ceil(partnerCount * 1.1);
       const magnetsNeeded = Math.ceil(partnerCount * 3 * 1.1);
       const standsNeeded = Math.ceil(partnerCount * 1.1);
       const recommendedStaff = Math.max(4, Math.ceil(partnerCount * 1.4));
 
-      // Check live stock levels
       const tumblerItem = state.inventory.find(i => i.id === "inv-tmb");
       const magTagsMissing = state.tags.filter(t => t.category === "MAG" && t.status === "Hilang").map(t => t.code);
 
       const toolsList = document.getElementById("playbook-tools-list");
       toolsList.innerHTML = `
         <li class="flex items-center justify-between py-1.5 border-b border-black/[0.05]">
-          <span class="text-[#1D1D1F] font-medium">Standing & X-Banners (incl. +10% cadangan)</span>
+          <span class="text-[#1D1D1F] font-medium">Spanduk & X-Banner (termasuk +10% cadangan)</span>
           <span class="font-bold text-[#0071E3]">${bannersNeeded} buah</span>
         </li>
         <li class="flex items-center justify-between py-1.5 border-b border-black/[0.05]">
-          <span class="text-[#1D1D1F] font-medium">Tanda Magnetik (Mix Kecil / Sedang / Besar)</span>
+          <span class="text-[#1D1D1F] font-medium">Tanda Magnetik (Campuran Kecil / Sedang / Besar)</span>
           <span class="font-bold text-[#0071E3]">${magnetsNeeded} buah</span>
         </li>
         <li class="flex items-center justify-between py-1.5 border-b border-black/[0.05]">
-          <span class="text-[#1D1D1F] font-medium">Display Meja Akrilik (Stan T & L)</span>
+          <span class="text-[#1D1D1F] font-medium">Pajangan Meja Akrilik (Stan T & L)</span>
           <span class="font-bold text-[#0071E3]">${standsNeeded} buah</span>
         </li>
         <li class="flex items-center justify-between py-1.5">
-          <span class="text-[#1D1D1F] font-medium">Suvenir Pulpen & Tas Kertas (Paperbag)</span>
+          <span class="text-[#1D1D1F] font-medium">Pulpen & Tas Kertas Promosi</span>
           <span class="font-bold text-[#1D1D1F]">${partnerCount * 40} set</span>
         </li>
       `;
@@ -1381,16 +2128,15 @@
       const stockWarning = document.getElementById("playbook-stock-warning");
       const warnings = [];
       if (tumblerItem && tumblerItem.available === 0) {
-        warnings.push("<strong>Botol Minum Termos stok 0</strong> — segera order ulang jika ada rencana hadiah mitra VIP.");
+        warnings.push("<strong>Stok Botol Minum VIP saat ini 0</strong> — segera pesan ulang jika direncanakan untuk hadiah mitra VIP.");
       }
       if (magTagsMissing.length > 0) {
-        warnings.push(`<strong>${magTagsMissing.length} Tanda Magnetik (${magTagsMissing.join(", ")})</strong> saat ini berstatus Hilang.`);
+        warnings.push(`<strong>${magTagsMissing.length} Tanda Magnetik (${magTagsMissing.join(", ")})</strong> saat ini ditandai Hilang.`);
       }
       stockWarning.innerHTML = warnings.length > 0
         ? warnings.join("<br/>")
-        : "<strong>Stok inventaris gudang sehat</strong> — barang cukup untuk acara ini.";
+        : "<strong>Seluruh stok gudang sehat</strong> — persediaan mencukupi untuk acara ini.";
 
-      // Partner & Staffing Strategy from live metrics
       let allPartners = [];
       state.events.forEach(e => allPartners.push(...e.partners));
       const pri = allPartners.filter(p => p.tier === "Priority");
@@ -1405,23 +2151,22 @@
       document.getElementById("playbook-strategy-content").innerHTML = `
         <div class="p-3 rounded-xl bg-[#FAFAFC] border border-black/[0.05]">
           <div class="font-semibold text-[#1D1D1F] mb-1">1. Tempatkan PIC Senior di Booth Tier-1</div>
-          <p class="text-[#515154]">Secara historis, Mitra Prioritas mengkonversi di <strong>${priRate}%</strong> dibanding <strong>${stdRate}%</strong> pada booth Standar. Dedikasikan 1 PIC senior per booth Prioritas selama ${durationDays} hari.</p>
+          <p class="text-[#515154]">Secara historis, Mitra Prioritas terkonversi sebesar <strong>${priRate}%</strong> dibanding <strong>${stdRate}%</strong> untuk booth Standar. Tugaskan 1 PIC senior penuh waktu per booth Prioritas selama ${durationDays} hari penuh.</p>
         </div>
         <div class="p-3 rounded-xl bg-[#FAFAFC] border border-black/[0.05]">
-          <div class="font-semibold text-[#1D1D1F] mb-1">2. Pimpin dengan Promo Subsidi Konversi Tinggi</div>
-          <p class="text-[#515154]">Booth unggulan berhasil menggunakan penawaran <strong>DP Rendah 10% + Masa Tenggang 3 Bulan</strong> dan <strong>Subsidi Tarif Penuh</strong>. Cetak tabel cicilan di setiap magnet.</p>
+          <div class="font-semibold text-[#1D1D1F] mb-1">2. Utamakan Penawaran Subsidi Konversi Tinggi</div>
+          <p class="text-[#515154]">Booth terbaik (mencapai hingga 99.4% target) berhasil menggunakan <strong>DP Rendah 10% + Masa Tenggang 3 Bulan</strong> dan <strong>Subsidi Tarif Penuh</strong>. Cetak tabel simulasi angsuran di setiap magnet.</p>
         </div>
       `;
       document.getElementById("playbook-staff-rec").textContent = `${recommendedStaff} PICs / Hari`;
 
-      // Interactive Chronological Checklist
       const checklistTasks = [
-        { id: "chk-1", timing: "H-7 Hari", text: "Finalisasi desain banner & magnet berbagai ukuran (sertakan info cicilan mencolok & kode QR)." },
-        { id: "chk-2", timing: "H-3 Hari", text: "Selesaikan pencetakan semua bahan promosi 1 hari penuh sebelum pengarahan tim (briefing) terakhir." },
-        { id: "chk-3", timing: "H-1 Hari", text: "Lakukan pengarahan skema promo 1-lawan-1 dengan tenaga penjualan (sales) booth mitra agar sejajar." },
-        { id: "chk-4", timing: "H-1 Hari", text: "Verifikasi kalkulator harga offline & akses VPN untuk persetujuan cepat oleh tim di kantor." },
-        { id: "chk-5", timing: "Hari H 08:00 AM", text: "Tiba sebelum pukul 09:00 pagi untuk mengamankan lokasi banner utama dan hindari gangguan rute / penempatan kabel di atas kepala." },
-        { id: "chk-6", timing: "Ops Harian", text: "Bagikan voucher makan individu (Rp 25rb/orang) untuk menghilangkan waktu kosong meninggalkan booth." }
+        { id: "chk-1", timing: "H-7 Hari", text: "Finalisasi desain spanduk & magnet multi-ukuran (sertakan info cicilan tebal & kode QR kontak)." },
+        { id: "chk-2", timing: "H-3 Hari", text: "Selesaikan seluruh pencetakan perlengkapan 1 hari penuh sebelum rapat briefing tim terakhir." },
+        { id: "chk-3", timing: "H-1 Hari", text: "Lakukan briefing skema promo 1-lawan-1 dengan sales mitra agar syarat penawaran selaras." },
+        { id: "chk-4", timing: "H-1 Hari", text: "Pastikan kalkulator simulasi offline & akses VPN berfungsi untuk persetujuan cepat." },
+        { id: "chk-5", timing: "Hari-1 08:00", text: "Tiba sebelum pukul 09.00 pagi untuk mengamankan lokasi spanduk utama jauh dari kabel atas." },
+        { id: "chk-6", timing: "Harian", text: "Bagikan voucher makan perorangan (Rp 25rb/orang) untuk menghindari kekosongan penjagaan booth." }
       ];
 
       const listEl = document.getElementById("playbook-checklist-items");
@@ -1463,11 +2208,247 @@
       textarea.select();
       document.execCommand("copy");
       textarea.remove();
-      showToast("Panduan berhasil disalin ke clipboard!");
+      showToast("Panduan berhasil disalin ke papan klip!");
     }
 
     // =========================================================================
-    // 9. INITIALIZATION
+    // 10. EXPORT TO EXCEL & 2-STEP DELETE VERIFICATION & EDIT PARTNER
+    // =========================================================================
+    function exportInsightsToExcel() {
+      try {
+        if (typeof XLSX === "undefined") {
+          showToast("Pustaka Excel sedang dimuat, silakan coba sebentar lagi.", "error");
+          return;
+        }
+
+        const selectedId = document.getElementById("event-filter-select").value;
+        const filteredEvents = selectedId === "all"
+          ? state.events
+          : state.events.filter(e => e.id === selectedId);
+
+        if (filteredEvents.length === 0) {
+          showToast("Tidak ada data acara untuk diekspor ke Excel.", "error");
+          return;
+        }
+
+        const eventSummaryRows = filteredEvents.map(evt => {
+          const tTarget = evt.partners.reduce((s, p) => s + Number(p.target || 0), 0);
+          const tAchieved = evt.partners.reduce((s, p) => s + Number(p.achieved || 0), 0);
+          const pct = tTarget > 0 ? ((tAchieved / tTarget) * 100).toFixed(1) + "%" : "0%";
+          return {
+            "Nama Acara": evt.name,
+            "Tanggal": evt.dates,
+            "Lokasi / Gedung": evt.venue,
+            "Jumlah Mitra": evt.partners.length,
+            "Rata-rata Staf Harian": evt.dailyStaff || 10,
+            "Total Target (Rp)": tTarget,
+            "Total Tercapai (Rp)": tAchieved,
+            "Persentase Pencapaian": pct,
+            "Catatan Evaluasi Lapangan": evt.evaluationNotes || "-"
+          };
+        });
+
+        const partnerDetailRows = [];
+        filteredEvents.forEach(evt => {
+          evt.partners.forEach(p => {
+            const pct = p.target > 0 ? ((p.achieved / p.target) * 100).toFixed(1) + "%" : "0%";
+            partnerDetailRows.push({
+              "Nama Acara": evt.name,
+              "Tanggal Acara": evt.dates,
+              "Nama Mitra / Peserta": p.name,
+              "Kategori": p.category || "Peralatan Industri",
+              "Tingkat Mitra": p.tier === "Priority" ? "Prioritas (Tier-1)" : "Standar",
+              "Skema Promo": p.promo || "Standar",
+              "PIC Utama": p.pic || "-",
+              "Target Anggaran (Rp)": Number(p.target || 0),
+              "Tercapai (Rp)": Number(p.achieved || 0),
+              "Pencapaian (%)": pct,
+              "Perangkat Disebarkan": p.tools || "-"
+            });
+          });
+        });
+
+        const wb = XLSX.utils.book_new();
+        const wsSummary = XLSX.utils.json_to_sheet(eventSummaryRows);
+        const wsPartners = XLSX.utils.json_to_sheet(partnerDetailRows);
+
+        wsSummary["!cols"] = [
+          { wch: 32 }, { wch: 18 }, { wch: 24 }, { wch: 14 },
+          { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 50 }
+        ];
+        wsPartners["!cols"] = [
+          { wch: 30 }, { wch: 16 }, { wch: 26 }, { wch: 20 },
+          { wch: 18 }, { wch: 28 }, { wch: 15 }, { wch: 20 },
+          { wch: 20 }, { wch: 16 }, { wch: 30 }
+        ];
+
+        XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Acara");
+        XLSX.utils.book_append_sheet(wb, wsPartners, "Kinerja Mitra");
+
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        const scopeLabel = selectedId === "all"
+          ? "Semua_Acara"
+          : filteredEvents[0].name.replace(/[^a-zA-Z0-9]/g, "_").slice(0, 25);
+
+        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([wbout], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ENCE_Insight_${scopeLabel}_${dateStamp}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 150);
+
+        showToast("File Excel insight data berhasil diunduh!");
+      } catch (err) {
+        console.error("Excel export error:", err);
+        showToast("Gagal mengekspor file Excel.", "error");
+      }
+    }
+
+    function openDeleteModal() {
+      const selectedId = document.getElementById("event-filter-select").value;
+      if (state.events.length === 0) {
+        showToast("Tidak ada data acara untuk dihapus.", "error");
+        return;
+      }
+
+      const targetLabel = selectedId === "all"
+        ? `SEMUA DATA (${state.events.length} acara beserta seluruh kinerja mitranya)`
+        : `data acara "${state.events.find(e => e.id === selectedId)?.name || "Terpilih"}"`;
+
+      document.getElementById("delete-step-badge").textContent = "Verifikasi Tahap 1 dari 2";
+      document.getElementById("delete-step-badge").className = "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF9500]/15 text-[#B25E00]";
+      document.getElementById("delete-modal-icon").className = "w-10 h-10 rounded-full bg-[#FF9500]/15 text-[#FF9500] flex items-center justify-center shrink-0";
+      document.getElementById("delete-modal-title").textContent = "Apakah Anda yakin ingin menghapus data?";
+      document.getElementById("delete-modal-desc").innerHTML = `Anda akan menghapus <strong>${targetLabel}</strong> dari ruang kerja ENCE Anda.`;
+
+      document.getElementById("delete-step2-box").classList.add("hidden");
+      document.getElementById("delete-confirm-checkbox").checked = false;
+      document.getElementById("delete-step1-btn").classList.remove("hidden");
+      document.getElementById("delete-step2-btn").classList.add("hidden");
+      document.getElementById("delete-step2-btn").disabled = true;
+
+      document.getElementById("delete-modal").classList.remove("hidden");
+    }
+
+    function proceedToDeleteStep2() {
+      document.getElementById("delete-step-badge").textContent = "Verifikasi Tahap 2 dari 2 (Konfirmasi Akhir)";
+      document.getElementById("delete-step-badge").className = "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]";
+      document.getElementById("delete-modal-icon").className = "w-10 h-10 rounded-full bg-[#FF3B30]/15 text-[#FF3B30] flex items-center justify-center shrink-0";
+      document.getElementById("delete-modal-title").textContent = "Verifikasi Kedua: Hapus Permanen?";
+      document.getElementById("delete-modal-desc").innerHTML = `Silakan centang kotak persetujuan di bawah ini untuk mengonfirmasi bahwa Anda benar-benar ingin menghapus data tersebut secara permanen.`;
+
+      document.getElementById("delete-step2-box").classList.remove("hidden");
+      document.getElementById("delete-step1-btn").classList.add("hidden");
+      document.getElementById("delete-step2-btn").classList.remove("hidden");
+    }
+
+    function toggleFinalDeleteBtn() {
+      const isChecked = document.getElementById("delete-confirm-checkbox").checked;
+      document.getElementById("delete-step2-btn").disabled = !isChecked;
+    }
+
+    function closeDeleteModal() {
+      document.getElementById("delete-modal").classList.add("hidden");
+    }
+
+    function executeDeleteData() {
+      const selectedId = document.getElementById("event-filter-select").value;
+      if (selectedId === "all") {
+        state.events = [];
+        showToast("Seluruh data acara berhasil dihapus.");
+      } else {
+        const deletedEvt = state.events.find(e => e.id === selectedId);
+        state.events = state.events.filter(e => e.id !== selectedId);
+        document.getElementById("event-filter-select").value = "all";
+        showToast(`Data acara "${deletedEvt ? deletedEvt.name : ""}" telah dihapus.`);
+      }
+
+      saveState();
+      populateEventDropdown();
+      renderDashboard();
+      generatePreEventPlaybook();
+      closeDeleteModal();
+    }
+
+    // --- Modal Handlers: Edit Data Booth Mitra ---
+    function openEditPartnerModal(eventId, partnerIndex) {
+      const evt = state.events.find(e => e.id === eventId);
+      if (!evt || !evt.partners[partnerIndex]) return;
+
+      const partner = evt.partners[partnerIndex];
+      document.getElementById("edit-partner-evt-id").value = eventId;
+      document.getElementById("edit-partner-idx").value = partnerIndex;
+      document.getElementById("edit-partner-event-label").textContent = `Acara: ${evt.name}`;
+
+      document.getElementById("edit-p-name").value = partner.name || "";
+      document.getElementById("edit-p-category").value = partner.category || "";
+      document.getElementById("edit-p-tier").value = partner.tier === "Priority" ? "Priority" : "Standard";
+      document.getElementById("edit-p-pic").value = partner.pic || "";
+      document.getElementById("edit-p-promo").value = partner.promo || "";
+      document.getElementById("edit-p-target").value = Number(partner.target || 0);
+      document.getElementById("edit-p-achieved").value = Number(partner.achieved || 0);
+
+      document.getElementById("edit-partner-modal").classList.remove("hidden");
+    }
+
+    function closeEditPartnerModal() {
+      document.getElementById("edit-partner-modal").classList.add("hidden");
+    }
+
+    function saveEditedPartner(e) {
+      e.preventDefault();
+      const eventId = document.getElementById("edit-partner-evt-id").value;
+      const partnerIndex = Number(document.getElementById("edit-partner-idx").value);
+
+      const evt = state.events.find(item => item.id === eventId);
+      if (!evt || !evt.partners[partnerIndex]) return;
+
+      const updatedName = document.getElementById("edit-p-name").value.trim();
+      evt.partners[partnerIndex] = {
+        ...evt.partners[partnerIndex],
+        name: updatedName,
+        category: document.getElementById("edit-p-category").value.trim() || "Peralatan Industri",
+        tier: document.getElementById("edit-p-tier").value,
+        pic: document.getElementById("edit-p-pic").value.trim() || "—",
+        promo: document.getElementById("edit-p-promo").value.trim() || "Standar",
+        target: Math.max(0, Number(document.getElementById("edit-p-target").value) || 0),
+        achieved: Math.max(0, Number(document.getElementById("edit-p-achieved").value) || 0)
+      };
+
+      saveState();
+      renderDashboard();
+      generatePreEventPlaybook();
+      closeEditPartnerModal();
+      showToast(`Data "${updatedName}" berhasil diperbarui!`);
+    }
+
+    function deleteSinglePartnerFromModal() {
+      const eventId = document.getElementById("edit-partner-evt-id").value;
+      const partnerIndex = Number(document.getElementById("edit-partner-idx").value);
+
+      const evt = state.events.find(item => item.id === eventId);
+      if (!evt || !evt.partners[partnerIndex]) return;
+
+      const removedName = evt.partners[partnerIndex].name;
+      evt.partners.splice(partnerIndex, 1);
+
+      saveState();
+      renderDashboard();
+      generatePreEventPlaybook();
+      closeEditPartnerModal();
+      showToast(`Booth mitra "${removedName}" telah dihapus.`);
+    }
+
+    // =========================================================================
+    // 11. INITIALIZATION
     // =========================================================================
     window.addEventListener("DOMContentLoaded", () => {
       loadState();
@@ -1476,6 +2457,7 @@
       renderToolsView();
       addPartnerFormRow();
       generatePreEventPlaybook();
+      initFirebaseFromSavedConfig();
     });
   </script>
 </body>
