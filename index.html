@@ -152,7 +152,7 @@
           </button>
           <button onclick="switchTab('tools')" id="tab-tools" class="segmented-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap flex-1 lg:flex-none text-center relative">
             Alat & Aset
-            <span id="nav-alert-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-[#FF3B30] ml-1 mb-0.5"></span>
+            <span id="nav-alert-dot" class="hidden inline-block w-1.5 h-1.5 rounded-full bg-[#FF3B30] ml-1 mb-0.5"></span>
           </button>
           <button onclick="switchTab('ai-checklist')" id="tab-ai-checklist" class="segmented-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap flex-1 lg:flex-none text-center">
             AI Daftar Periksa
@@ -202,7 +202,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
             </svg>
             <select id="event-filter-select" onchange="renderDashboard()" class="bg-transparent text-sm font-medium text-[#1D1D1F] focus:outline-none pr-2 cursor-pointer truncate max-w-[180px] sm:max-w-xs">
-              <option value="all">Semua Acara Digabung</option>
+              <option value="all">Semua Acara Digabung (0)</option>
             </select>
           </div>
 
@@ -237,8 +237,8 @@
             </span>
           </div>
           <div class="mt-4">
-            <div id="kpi-events-count" class="text-3xl font-bold tracking-tight">2</div>
-            <p id="kpi-events-sub" class="text-xs text-[#86868B] mt-1">9 Booth Mitra Pameran</p>
+            <div id="kpi-events-count" class="text-3xl font-bold tracking-tight">0</div>
+            <p id="kpi-events-sub" class="text-xs text-[#86868B] mt-1">0 Booth Mitra Pameran</p>
           </div>
         </div>
 
@@ -253,7 +253,7 @@
             </span>
           </div>
           <div class="mt-4">
-            <div id="kpi-target-amount" class="text-2xl sm:text-3xl font-bold tracking-tight">Rp 83.00B</div>
+            <div id="kpi-target-amount" class="text-2xl sm:text-3xl font-bold tracking-tight">Rp 0</div>
             <p class="text-xs text-[#86868B] mt-1">Kuota Gabungan Mitra</p>
           </div>
         </div>
@@ -262,12 +262,12 @@
         <div class="bento-card bento-card-hover p-5 flex flex-col justify-between">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wider text-[#86868B]">Tercapai</span>
-            <span id="kpi-achievement-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">57.4%</span>
+            <span id="kpi-achievement-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">0.0%</span>
           </div>
           <div class="mt-4">
-            <div id="kpi-achieved-amount" class="text-2xl sm:text-3xl font-bold tracking-tight">Rp 47.65B</div>
+            <div id="kpi-achieved-amount" class="text-2xl sm:text-3xl font-bold tracking-tight">Rp 0</div>
             <div class="w-full bg-[#F5F5F7] h-2 rounded-full mt-2.5 overflow-hidden">
-              <div id="kpi-achievement-bar" class="bg-[#34C759] h-full rounded-full transition-all duration-500" style="width: 57.4%"></div>
+              <div id="kpi-achievement-bar" class="bg-[#34C759] h-full rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
           </div>
         </div>
@@ -276,11 +276,11 @@
         <div class="bento-card bento-card-hover p-5 flex flex-col justify-between cursor-pointer" onclick="switchTab('tools')">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wider text-[#86868B]">Kesehatan Aset</span>
-            <span id="kpi-asset-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]">2 Peringatan</span>
+            <span id="kpi-asset-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">Sehat</span>
           </div>
           <div class="mt-4">
-            <div id="kpi-asset-score" class="text-2xl sm:text-3xl font-bold tracking-tight">97.2%</div>
-            <p id="kpi-asset-sub" class="text-xs text-[#86868B] mt-1">5 Magnet Hilang • 0 Botol Minum</p>
+            <div id="kpi-asset-score" class="text-2xl sm:text-3xl font-bold tracking-tight">100.0%</div>
+            <p id="kpi-asset-sub" class="text-xs text-[#86868B] mt-1">0 Tag Hilang • 0 Stok Habis</p>
           </div>
         </div>
       </div>
@@ -306,15 +306,15 @@
                 <div class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-[#0071E3]"></span>
                   <span class="text-sm font-semibold text-[#1D1D1F]">Mitra Prioritas (Tier-1)</span>
-                  <span id="tier-priority-count" class="text-xs text-[#86868B]">(5 mitra)</span>
+                  <span id="tier-priority-count" class="text-xs text-[#86868B]">(0 mitra)</span>
                 </div>
                 <div class="text-right">
-                  <span id="tier-priority-pct" class="text-sm font-bold text-[#0071E3]">75.9%</span>
-                  <span id="tier-priority-vals" class="text-xs text-[#86868B] ml-1.5">(Rp 41.74B / Rp 55.00B)</span>
+                  <span id="tier-priority-pct" class="text-sm font-bold text-[#0071E3]">0.0%</span>
+                  <span id="tier-priority-vals" class="text-xs text-[#86868B] ml-1.5">(Rp 0 / Rp 0)</span>
                 </div>
               </div>
               <div class="w-full h-3.5 bg-[#F5F5F7] rounded-full overflow-hidden">
-                <div id="tier-priority-bar" class="h-full bg-[#0071E3] rounded-full transition-all duration-500" style="width: 75.9%"></div>
+                <div id="tier-priority-bar" class="h-full bg-[#0071E3] rounded-full transition-all duration-500" style="width: 0%"></div>
               </div>
             </div>
 
@@ -324,22 +324,22 @@
                 <div class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-[#86868B]"></span>
                   <span class="text-sm font-semibold text-[#1D1D1F]">Mitra Standar</span>
-                  <span id="tier-standard-count" class="text-xs text-[#86868B]">(4 mitra)</span>
+                  <span id="tier-standard-count" class="text-xs text-[#86868B]">(0 mitra)</span>
                 </div>
                 <div class="text-right">
-                  <span id="tier-standard-pct" class="text-sm font-bold text-[#1D1D1F]">17.5%</span>
-                  <span id="tier-standard-vals" class="text-xs text-[#86868B] ml-1.5">(Rp 4.90B / Rp 28.00B)</span>
+                  <span id="tier-standard-pct" class="text-sm font-bold text-[#1D1D1F]">0.0%</span>
+                  <span id="tier-standard-vals" class="text-xs text-[#86868B] ml-1.5">(Rp 0 / Rp 0)</span>
                 </div>
               </div>
               <div class="w-full h-3.5 bg-[#F5F5F7] rounded-full overflow-hidden">
-                <div id="tier-standard-bar" class="h-full bg-[#86868B] rounded-full transition-all duration-500" style="width: 17.5%"></div>
+                <div id="tier-standard-bar" class="h-full bg-[#86868B] rounded-full transition-all duration-500" style="width: 0%"></div>
               </div>
             </div>
           </div>
 
           <div id="tier-insight-callout" class="mt-6 pt-4 border-t border-black/[0.06] flex items-start gap-2.5 text-xs text-[#1D1D1F]">
             <span class="text-[#0071E3] font-bold mt-0.5">✦</span>
-            <p class="leading-relaxed text-[#515154]">Mitra Prioritas memberikan <strong class="text-[#1D1D1F]">konversi anggaran 4.3x lebih tinggi</strong> dari booth Standar. Tugaskan PIC senior khusus dan subsidi tarif untuk mitra Tier-1 terlebih dahulu.</p>
+            <p class="leading-relaxed text-[#515154]">Mulai tambahkan acara pertama Anda di tab <strong class="text-[#1D1D1F]">Tambah Acara</strong> atau hubungkan akun Cloud untuk menyinkronkan data dari perangkat lain.</p>
           </div>
         </div>
 
@@ -347,27 +347,27 @@
         <div class="bento-card p-6 flex flex-col justify-between bg-gradient-to-b from-white to-[#FAFAFC]">
           <div>
             <span class="text-xs font-semibold uppercase tracking-wider text-[#86868B]">Cakupan Terpilih</span>
-            <h3 id="scope-title" class="text-lg font-bold text-[#1D1D1F] mt-1">Semua Pameran Terlacak</h3>
-            <p id="scope-meta" class="text-xs text-[#86868B] mt-1">2 Pameran Utama • Data Lapangan Digabung</p>
+            <h3 id="scope-title" class="text-lg font-bold text-[#1D1D1F] mt-1">Belum Ada Acara Terlacak</h3>
+            <p id="scope-meta" class="text-xs text-[#86868B] mt-1">0 Pameran • Siap Menerima Data</p>
 
             <div class="mt-5 space-y-3">
               <div class="flex items-center justify-between text-xs py-2 border-b border-black/[0.05]">
                 <span class="text-[#86868B]">Mitra Terbaik</span>
-                <span id="scope-top-partner" class="font-semibold text-[#1D1D1F]">First Machinery Corp (99.4%)</span>
+                <span id="scope-top-partner" class="font-semibold text-[#1D1D1F]">—</span>
               </div>
               <div class="flex items-center justify-between text-xs py-2 border-b border-black/[0.05]">
                 <span class="text-[#86868B]">Promo Ter-Efektif</span>
-                <span id="scope-top-promo" class="font-semibold text-[#1D1D1F]">DP 10% + Masa Tenggang 3B</span>
+                <span id="scope-top-promo" class="font-semibold text-[#1D1D1F]">—</span>
               </div>
               <div class="flex items-center justify-between text-xs py-2">
                 <span class="text-[#86868B]">Rata-rata Tim Lapangan</span>
-                <span id="scope-avg-staff" class="font-semibold text-[#1D1D1F]">11 Staf / Hari</span>
+                <span id="scope-avg-staff" class="font-semibold text-[#1D1D1F]">0 PICs / Hari</span>
               </div>
             </div>
           </div>
 
-          <button onclick="switchTab('ai-checklist')" class="mt-6 w-full py-2.5 px-4 rounded-xl bg-[#1D1D1F] hover:bg-black text-white text-xs font-semibold transition-all flex items-center justify-center gap-2">
-            <span>Buat Panduan Pra-Acara Berikutnya</span>
+          <button onclick="switchTab('add-event')" class="mt-6 w-full py-2.5 px-4 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2">
+            <span>+ Tambah atau Impor Acara Pertama</span>
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
             </svg>
@@ -712,12 +712,13 @@
 
   </main>
 
-  <!-- Subtle Footer with Sample Data Reset -->
+  <!-- Subtle Footer with Cloud & Sample Controls -->
   <footer class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-black/[0.05] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#86868B]">
     <div id="footer-storage-label">ENCE — Intelijen Acara & Pameran • Ruang Kerja Lokal (Offline-First)</div>
-    <div class="flex items-center gap-4">
+    <div class="flex flex-wrap items-center gap-4">
       <button onclick="openCloudSettingsModal()" class="text-[#0071E3] hover:underline font-medium">Hubungkan Cloud & Akun</button>
-      <button onclick="resetAllData()" class="hover:text-[#FF3B30] transition-colors underline">Reset Data Sampel Asli</button>
+      <button onclick="loadDemoSampleData()" class="hover:text-[#1D1D1F] transition-colors underline">Muat Data Contoh</button>
+      <button onclick="resetAllData()" class="hover:text-[#FF3B30] transition-colors underline">Kosongkan Semua Data</button>
     </div>
   </footer>
 
@@ -738,7 +739,7 @@
         <div>
           <span id="delete-step-badge" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF9500]/15 text-[#B25E00]">Verifikasi Tahap 1 dari 2</span>
           <h3 id="delete-modal-title" class="text-base font-bold text-[#1D1D1F] mt-1">Apakah Anda yakin ingin menghapus data?</h3>
-          <p id="delete-modal-desc" class="text-xs text-[#515154] mt-1 leading-relaxed">Data yang dihapus tidak dapat dipulihkan secara otomatis kecuali Anda mereset ke data sampel awal.</p>
+          <p id="delete-modal-desc" class="text-xs text-[#515154] mt-1 leading-relaxed">Data yang dihapus tidak dapat dipulihkan secara otomatis.</p>
         </div>
       </div>
 
@@ -932,7 +933,7 @@
           </div>
         </div>
         <p id="new-tag-preview" class="text-[11px] text-[#0071E3] bg-[#0071E3]/10 px-3 py-2 rounded-xl font-medium">
-          Contoh kode yang akan dibuat: MAG-37, MAG-38, ...
+          Contoh kode yang akan dibuat: MAG-01, MAG-02, ...
         </p>
       </div>
 
@@ -1035,9 +1036,9 @@
 
   <script>
     // =========================================================================
-    // 1. DEFAULT PRE-LOADED REALISTIC SAMPLE DATA
+    // 1. OPTIONAL SAMPLE DATA (LOADED ONLY ON USER REQUEST)
     // =========================================================================
-    const DEFAULT_EVENTS = [
+    const DEMO_EVENTS = [
       {
         id: "evt-plastics-2024",
         name: "Plastics & Rubber Expo 2024",
@@ -1069,7 +1070,7 @@
       }
     ];
 
-    const DEFAULT_INVENTORY = [
+    const DEMO_INVENTORY = [
       { id: "inv-mag", name: "Tanda Magnetik", type: "Pakai Ulang", total: 36, available: 31, missing: 5, unit: "buah" },
       { id: "inv-bnr-l", name: "Spanduk Besar", type: "Pakai Ulang", total: 4, available: 4, missing: 0, unit: "buah" },
       { id: "inv-bnr-s", name: "Spanduk Kecil", type: "Pakai Ulang", total: 11, available: 11, missing: 0, unit: "buah" },
@@ -1083,7 +1084,7 @@
       { id: "inv-tmb", name: "Botol Minum VIP", type: "Habis Pakai", total: 100, available: 0, missing: 0, unit: "buah" }
     ];
 
-    function buildDefaultTags() {
+    function buildDemoTags() {
       const tags = [];
       const missingMagnets = new Set([9, 10, 11, 12, 24]);
       for (let i = 1; i <= 36; i++) {
@@ -1144,7 +1145,7 @@
     }
 
     // =========================================================================
-    // 3. STATE, LOCALSTORAGE & FIREBASE CLOUD SYNC MANAGEMENT
+    // 3. STATE, LOCALSTORAGE & FIREBASE CLOUD SYNC MANAGEMENT (CLEAN START)
     // =========================================================================
     let state = {
       events: [],
@@ -1162,28 +1163,29 @@
 
     function loadState() {
       try {
-        const savedEvents = localStorage.getItem("ence_events_id_v1");
-        const savedInv = localStorage.getItem("ence_inventory_id_v1");
-        const savedTags = localStorage.getItem("ence_tags_id_v1");
-        const savedChecks = localStorage.getItem("ence_checks_id_v1");
+        const savedEvents = localStorage.getItem("ence_events_clean_v1");
+        const savedInv = localStorage.getItem("ence_inventory_clean_v1");
+        const savedTags = localStorage.getItem("ence_tags_clean_v1");
+        const savedChecks = localStorage.getItem("ence_checks_clean_v1");
 
-        state.events = savedEvents ? JSON.parse(savedEvents) : JSON.parse(JSON.stringify(DEFAULT_EVENTS));
-        state.inventory = savedInv ? JSON.parse(savedInv) : JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
-        state.tags = savedTags ? JSON.parse(savedTags) : buildDefaultTags();
+        state.events = savedEvents ? JSON.parse(savedEvents) : [];
+        state.inventory = savedInv ? JSON.parse(savedInv) : [];
+        state.tags = savedTags ? JSON.parse(savedTags) : [];
         state.checklistStates = savedChecks ? JSON.parse(savedChecks) : {};
       } catch (err) {
-        state.events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
-        state.inventory = JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
-        state.tags = buildDefaultTags();
+        state.events = [];
+        state.inventory = [];
+        state.tags = [];
+        state.checklistStates = {};
       }
     }
 
     function saveState() {
       try {
-        localStorage.setItem("ence_events_id_v1", JSON.stringify(state.events));
-        localStorage.setItem("ence_inventory_id_v1", JSON.stringify(state.inventory));
-        localStorage.setItem("ence_tags_id_v1", JSON.stringify(state.tags));
-        localStorage.setItem("ence_checks_id_v1", JSON.stringify(state.checklistStates));
+        localStorage.setItem("ence_events_clean_v1", JSON.stringify(state.events));
+        localStorage.setItem("ence_inventory_clean_v1", JSON.stringify(state.inventory));
+        localStorage.setItem("ence_tags_clean_v1", JSON.stringify(state.tags));
+        localStorage.setItem("ence_checks_clean_v1", JSON.stringify(state.checklistStates));
       } catch (e) {
         console.warn("Storage quota warning", e);
       }
@@ -1193,12 +1195,28 @@
       }
     }
 
+    function loadDemoSampleData() {
+      state.events = JSON.parse(JSON.stringify(DEMO_EVENTS));
+      state.inventory = JSON.parse(JSON.stringify(DEMO_INVENTORY));
+      state.tags = buildDemoTags();
+      state.checklistStates = {};
+      saveState();
+      populateEventDropdown();
+      renderDashboard();
+      renderToolsView();
+      generatePreEventPlaybook();
+      showToast("Data contoh berhasil dimuat untuk simulasi.");
+    }
+
     function resetAllData() {
-      localStorage.removeItem("ence_events_id_v1");
-      localStorage.removeItem("ence_inventory_id_v1");
-      localStorage.removeItem("ence_tags_id_v1");
-      localStorage.removeItem("ence_checks_id_v1");
-      loadState();
+      localStorage.removeItem("ence_events_clean_v1");
+      localStorage.removeItem("ence_inventory_clean_v1");
+      localStorage.removeItem("ence_tags_clean_v1");
+      localStorage.removeItem("ence_checks_clean_v1");
+      state.events = [];
+      state.inventory = [];
+      state.tags = [];
+      state.checklistStates = {};
       if (currentCloudUser && firebaseDb) {
         pushLocalToCloud(true);
       }
@@ -1206,7 +1224,7 @@
       renderDashboard();
       renderToolsView();
       generatePreEventPlaybook();
-      showToast("Data sampel berhasil dipulihkan ke pengaturan awal.");
+      showToast("Seluruh data telah dikosongkan.");
     }
 
     function parseFirebaseConfigInput(rawText) {
@@ -1374,10 +1392,10 @@
           if (Array.isArray(cloudData.tags)) state.tags = cloudData.tags;
           if (cloudData.checklistStates) state.checklistStates = cloudData.checklistStates;
 
-          localStorage.setItem("ence_events_id_v1", JSON.stringify(state.events));
-          localStorage.setItem("ence_inventory_id_v1", JSON.stringify(state.inventory));
-          localStorage.setItem("ence_tags_id_v1", JSON.stringify(state.tags));
-          localStorage.setItem("ence_checks_id_v1", JSON.stringify(state.checklistStates));
+          localStorage.setItem("ence_events_clean_v1", JSON.stringify(state.events));
+          localStorage.setItem("ence_inventory_clean_v1", JSON.stringify(state.inventory));
+          localStorage.setItem("ence_tags_clean_v1", JSON.stringify(state.tags));
+          localStorage.setItem("ence_checks_clean_v1", JSON.stringify(state.checklistStates));
 
           populateEventDropdown();
           renderDashboard();
@@ -1546,8 +1564,20 @@
       document.getElementById("tier-standard-vals").textContent = `(${formatIDRCompact(stdAchieved)} / ${formatIDRCompact(stdTarget)})`;
       document.getElementById("tier-standard-bar").style.width = `${Math.min(100, stdPct)}%`;
 
+      // Update Strategic Callout
+      const calloutEl = document.getElementById("tier-insight-callout");
+      if (allPartners.length === 0) {
+        calloutEl.innerHTML = `<span class="text-[#0071E3] font-bold mt-0.5">✦</span><p class="leading-relaxed text-[#515154]">Belum ada data acara yang tercatat. Mulai tambahkan acara pertama Anda melalui tombol <strong class="text-[#1D1D1F]">Acara Baru</strong> di pojok kanan atas.</p>`;
+      } else {
+        const ratio = stdPct > 0 ? (priPct / stdPct).toFixed(1) : "tinggi";
+        calloutEl.innerHTML = `<span class="text-[#0071E3] font-bold mt-0.5">✦</span><p class="leading-relaxed text-[#515154]">Mitra Prioritas mencatat konversi <strong class="text-[#1D1D1F]">${priPct.toFixed(1)}%</strong> (${stdPct > 0 ? ratio + 'x dibanding Standar' : 'unggul dari Standar'}). Tugaskan PIC senior khusus dan subsidi tarif untuk mitra Tier-1 terlebih dahulu.</p>`;
+      }
+
       // Update Scope Snapshot Card
-      if (selectedId === "all") {
+      if (filteredEvents.length === 0) {
+        document.getElementById("scope-title").textContent = "Belum Ada Acara Terlacak";
+        document.getElementById("scope-meta").textContent = "0 Pameran • Ruang Kerja Siap Digunakan";
+      } else if (selectedId === "all") {
         document.getElementById("scope-title").textContent = "Semua Pameran Terlacak";
         document.getElementById("scope-meta").textContent = `${filteredEvents.length} Pameran • Data Lapangan Digabung`;
       } else if (filteredEvents[0]) {
@@ -1585,7 +1615,7 @@
 
       const tbody = document.getElementById("partner-table-body");
       if (visiblePartners.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-xs text-[#86868B]">Tidak ada booth mitra yang sesuai dengan filter Anda.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-10 text-center text-xs text-[#86868B]">Belum ada data booth mitra. Klik <strong>+ Acara Baru</strong> untuk mulai menginput data pameran Anda.</td></tr>`;
       } else {
         tbody.innerHTML = visiblePartners.map(p => {
           const pct = p.target > 0 ? ((p.achieved / p.target) * 100) : 0;
@@ -1628,7 +1658,7 @@
       // Render Evaluation Notes
       const evalContainer = document.getElementById("evaluation-notes-list");
       if (filteredEvents.length === 0) {
-        evalContainer.innerHTML = `<div class="col-span-2 text-center py-6 text-xs text-[#86868B]">Belum ada catatan evaluasi untuk cakupan yang dipilih.</div>`;
+        evalContainer.innerHTML = `<div class="col-span-2 text-center py-6 text-xs text-[#86868B]">Belum ada catatan evaluasi lapangan yang tersimpan.</div>`;
       } else {
         evalContainer.innerHTML = filteredEvents.map(evt => `
           <div class="p-4 rounded-xl bg-[#FAFAFC] border border-black/[0.05]">
@@ -1847,73 +1877,82 @@
       syncHardwareCountsFromTags();
 
       const cardsGrid = document.getElementById("inventory-cards-grid");
-      cardsGrid.innerHTML = state.inventory.map(item => {
-        const isOut = item.available === 0;
-        const hasMissing = item.missing > 0;
-        const pct = item.total > 0 ? Math.min(100, Math.round((item.available / item.total) * 100)) : 0;
-
-        let badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">Tersedia</span>`;
-        let barColor = "bg-[#34C759]";
-
-        if (isOut) {
-          badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]">Stok Habis</span>`;
-          barColor = "bg-[#FF3B30]";
-        } else if (hasMissing) {
-          badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF9500]/15 text-[#B25E00]">${item.missing} Hilang</span>`;
-          barColor = "bg-[#FF9500]";
-        }
-
-        const isTagSynced = ["inv-mag", "inv-bnr-l", "inv-bnr-s"].includes(item.id);
-        const stepBig = item.type === "Habis Pakai" ? 50 : 5;
-
-        const stockControls = isTagSynced ? `
-          <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-black/[0.05]">
-            <span class="text-[10px] text-[#86868B]">Otomatis dari matriks tag</span>
-            <button onclick="openDeleteInvModal('${item.id}')" class="text-[#86868B] hover:text-[#FF3B30] p-1 transition-colors" title="Hapus item">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
-            </button>
-          </div>
-        ` : `
-          <div class="flex items-center justify-between gap-1.5 mt-3 pt-2.5 border-t border-black/[0.05]">
-            <div class="flex items-center gap-1">
-              <button onclick="adjustInventoryStock('${item.id}', -1)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">-1</button>
-              <button onclick="adjustInventoryStock('${item.id}', 1)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">+1</button>
-              <button onclick="adjustInventoryStock('${item.id}', ${stepBig})" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">+${stepBig}</button>
-            </div>
-            <button onclick="openDeleteInvModal('${item.id}')" class="text-[#86868B] hover:text-[#FF3B30] p-1 transition-colors" title="Hapus item">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
-            </button>
+      if (state.inventory.length === 0) {
+        cardsGrid.innerHTML = `
+          <div class="col-span-full bento-card p-8 text-center space-y-2">
+            <p class="text-sm font-semibold text-[#1D1D1F]">Belum ada daftar inventaris alat & aset.</p>
+            <p class="text-xs text-[#86868B]">Klik tombol <strong>+ Tambah Item Baru</strong> di atas untuk mencatat perangkat booth atau stok barang promosi Anda.</p>
           </div>
         `;
+      } else {
+        cardsGrid.innerHTML = state.inventory.map(item => {
+          const isOut = item.available === 0;
+          const hasMissing = item.missing > 0;
+          const pct = item.total > 0 ? Math.min(100, Math.round((item.available / item.total) * 100)) : 0;
 
-        return `
-          <div class="bento-card p-4 flex flex-col justify-between">
-            <div>
-              <div class="flex items-start justify-between gap-2">
-                <div>
-                  <span class="text-[10px] font-semibold uppercase tracking-wider text-[#86868B]">${item.type}</span>
-                  <h3 class="text-sm font-bold text-[#1D1D1F] mt-0.5">${item.name}</h3>
+          let badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">Tersedia</span>`;
+          let barColor = "bg-[#34C759]";
+
+          if (isOut) {
+            badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF3B30]/15 text-[#FF3B30]">Stok Habis</span>`;
+            barColor = "bg-[#FF3B30]";
+          } else if (hasMissing) {
+            badge = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#FF9500]/15 text-[#B25E00]">${item.missing} Hilang</span>`;
+            barColor = "bg-[#FF9500]";
+          }
+
+          const isTagSynced = ["inv-mag", "inv-bnr-l", "inv-bnr-s"].includes(item.id);
+          const stepBig = item.type === "Habis Pakai" ? 50 : 5;
+
+          const stockControls = isTagSynced ? `
+            <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-black/[0.05]">
+              <span class="text-[10px] text-[#86868B]">Otomatis dari matriks tag</span>
+              <button onclick="openDeleteInvModal('${item.id}')" class="text-[#86868B] hover:text-[#FF3B30] p-1 transition-colors" title="Hapus item">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+              </button>
+            </div>
+          ` : `
+            <div class="flex items-center justify-between gap-1.5 mt-3 pt-2.5 border-t border-black/[0.05]">
+              <div class="flex items-center gap-1">
+                <button onclick="adjustInventoryStock('${item.id}', -1)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">-1</button>
+                <button onclick="adjustInventoryStock('${item.id}', 1)" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">+1</button>
+                <button onclick="adjustInventoryStock('${item.id}', ${stepBig})" class="px-2 py-0.5 rounded bg-[#F5F5F7] hover:bg-black/10 text-xs font-semibold">+${stepBig}</button>
+              </div>
+              <button onclick="openDeleteInvModal('${item.id}')" class="text-[#86868B] hover:text-[#FF3B30] p-1 transition-colors" title="Hapus item">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+              </button>
+            </div>
+          `;
+
+          return `
+            <div class="bento-card p-4 flex flex-col justify-between">
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-[#86868B]">${item.type}</span>
+                    <h3 class="text-sm font-bold text-[#1D1D1F] mt-0.5">${item.name}</h3>
+                  </div>
+                  ${badge}
                 </div>
-                ${badge}
-              </div>
 
-              <div class="mt-3 flex items-baseline justify-between">
-                <span class="text-2xl font-bold text-[#1D1D1F]">${item.available}</span>
-                <span class="text-xs text-[#86868B]">dari ${item.total} ${item.unit}</span>
-              </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                  <span class="text-2xl font-bold text-[#1D1D1F]">${item.available}</span>
+                  <span class="text-xs text-[#86868B]">dari ${item.total} ${item.unit}</span>
+                </div>
 
-              <div class="w-full h-1.5 bg-[#F5F5F7] rounded-full mt-2 overflow-hidden">
-                <div class="${barColor} h-full rounded-full transition-all" style="width: ${pct}%"></div>
+                <div class="w-full h-1.5 bg-[#F5F5F7] rounded-full mt-2 overflow-hidden">
+                  <div class="${barColor} h-full rounded-full transition-all" style="width: ${pct}%"></div>
+                </div>
               </div>
+              ${stockControls}
             </div>
-            ${stockControls}
-          </div>
-        `;
-      }).join("");
+          `;
+        }).join("");
+      }
 
       // Render Serialized Asset Tags
       const catFilter = document.getElementById("asset-category-filter").value;
@@ -1922,23 +1961,27 @@
         : state.tags.filter(t => t.category === catFilter);
 
       const tagContainer = document.getElementById("serialized-tags-container");
-      tagContainer.innerHTML = filteredTags.map(tag => {
-        let style = "bg-[#34C759]/12 text-[#1D6F32] border-[#34C759]/30";
-        if (tag.status === "Dipakai") style = "bg-[#0071E3]/12 text-[#005BB5] border-[#0071E3]/30";
-        if (tag.status === "Hilang") style = "bg-[#FF3B30]/15 text-[#D70015] border-[#FF3B30]/40 font-bold";
+      if (filteredTags.length === 0) {
+        tagContainer.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-[#86868B]">Belum ada tag nomor seri perangkat. Klik <strong>+ Tambah Tag</strong> untuk membuat kode aset berseri.</div>`;
+      } else {
+        tagContainer.innerHTML = filteredTags.map(tag => {
+          let style = "bg-[#34C759]/12 text-[#1D6F32] border-[#34C759]/30";
+          if (tag.status === "Dipakai") style = "bg-[#0071E3]/12 text-[#005BB5] border-[#0071E3]/30";
+          if (tag.status === "Hilang") style = "bg-[#FF3B30]/15 text-[#D70015] border-[#FF3B30]/40 font-bold";
 
-        return `
-          <div class="relative group">
-            <button onclick="cycleTagStatus('${tag.code}')" title="Klik untuk ganti status (${tag.status})" class="w-full py-2 px-1.5 rounded-xl border text-[11px] font-medium text-center transition-transform active:scale-95 ${style}">
-              <div>${tag.code}</div>
-              <div class="text-[9px] opacity-80 mt-0.5">${tag.status}</div>
-            </button>
-            <button onclick="removeSerializedTag('${tag.code}')" title="Hapus tag ${tag.code}" class="hidden group-hover:flex items-center justify-center absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#1D1D1F] hover:bg-[#FF3B30] text-white text-[9px] shadow">
-              ✕
-            </button>
-          </div>
-        `;
-      }).join("");
+          return `
+            <div class="relative group">
+              <button onclick="cycleTagStatus('${tag.code}')" title="Klik untuk ganti status (${tag.status})" class="w-full py-2 px-1.5 rounded-xl border text-[11px] font-medium text-center transition-transform active:scale-95 ${style}">
+                <div>${tag.code}</div>
+                <div class="text-[9px] opacity-80 mt-0.5">${tag.status}</div>
+              </button>
+              <button onclick="removeSerializedTag('${tag.code}')" title="Hapus tag ${tag.code}" class="hidden group-hover:flex items-center justify-center absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#1D1D1F] hover:bg-[#FF3B30] text-white text-[9px] shadow">
+                ✕
+              </button>
+            </div>
+          `;
+        }).join("");
+      }
     }
 
     function cycleTagStatus(code) {
@@ -2135,7 +2178,7 @@
       }
       stockWarning.innerHTML = warnings.length > 0
         ? warnings.join("<br/>")
-        : "<strong>Seluruh stok gudang sehat</strong> — persediaan mencukupi untuk acara ini.";
+        : "<strong>Status inventaris aman</strong> — periksa kembali stok fisik di tab Alat & Aset sebelum keberangkatan.";
 
       let allPartners = [];
       state.events.forEach(e => allPartners.push(...e.partners));
@@ -2155,7 +2198,7 @@
         </div>
         <div class="p-3 rounded-xl bg-[#FAFAFC] border border-black/[0.05]">
           <div class="font-semibold text-[#1D1D1F] mb-1">2. Utamakan Penawaran Subsidi Konversi Tinggi</div>
-          <p class="text-[#515154]">Booth terbaik (mencapai hingga 99.4% target) berhasil menggunakan <strong>DP Rendah 10% + Masa Tenggang 3 Bulan</strong> dan <strong>Subsidi Tarif Penuh</strong>. Cetak tabel simulasi angsuran di setiap magnet.</p>
+          <p class="text-[#515154]">Fokuskan penawaran pada skema <strong>DP Rendah + Masa Tenggang</strong> dan <strong>Subsidi Tarif Penuh</strong>. Cetak tabel simulasi angsuran di setiap magnet agar mudah dibaca pengunjung.</p>
         </div>
       `;
       document.getElementById("playbook-staff-rec").textContent = `${recommendedStaff} PICs / Hari`;
@@ -2166,7 +2209,7 @@
         { id: "chk-3", timing: "H-1 Hari", text: "Lakukan briefing skema promo 1-lawan-1 dengan sales mitra agar syarat penawaran selaras." },
         { id: "chk-4", timing: "H-1 Hari", text: "Pastikan kalkulator simulasi offline & akses VPN berfungsi untuk persetujuan cepat." },
         { id: "chk-5", timing: "Hari-1 08:00", text: "Tiba sebelum pukul 09.00 pagi untuk mengamankan lokasi spanduk utama jauh dari kabel atas." },
-        { id: "chk-6", timing: "Harian", text: "Bagikan voucher makan perorangan (Rp 25rb/orang) untuk menghindari kekosongan penjagaan booth." }
+        { id: "chk-6", timing: "Harian", text: "Bagikan voucher makan perorangan untuk menghindari kekosongan penjagaan booth." }
       ];
 
       const listEl = document.getElementById("playbook-checklist-items");
